@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>server</artifactId>
+	<version>1.0.0</version>
+
+	<parent>
+		<artifactId>displaypannel</artifactId>
+		<groupId>dev.projectganymede.iot</groupId>
+		<version>1.0.0</version>
+	</parent>
+
+	<packaging>jar</packaging>
+
+	<build>
+		<finalName>server</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.1.1</version>
+				<configuration>
+					<mainClass>server.ServerMain</mainClass>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>
+										server.ServerMain
+									</mainClass>
+								</manifest>
+							</archive>
+							<descriptors>
+								<descriptor>../test-dependencies-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>	
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>io.javalin</groupId>
+			<artifactId>javalin</artifactId>
+			<version>6.4.0</version>
+		</dependency>
+	</dependencies>
+
+</project>
