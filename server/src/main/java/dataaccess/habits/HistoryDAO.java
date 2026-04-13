@@ -13,8 +13,8 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	private static final String DB_INIT_STATEMENT = String.format("""
 			CREATE TABLE IF NOT EXISTS %s (
 				`id` SERIAL PRIMARY KEY,
-				`habit_id` INTEGER NOT NULL,
-				`completion_date DATE NOT NULL,
+				`habit_id` BIGINT UNSIGNED NOT NULL,
+				`completion_date` DATE NOT NULL,
 				`completed` BOOLEAN NOT NULL DEFAULT FALSE,
 				`notes` TEXT,
 

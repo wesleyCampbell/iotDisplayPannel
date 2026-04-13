@@ -1,4 +1,4 @@
-package dataaccess.habbits;
+package dataaccess.habits;
 
 import dataaccess.SQLDatabaseDAO;
 import dataaccess.exception.*;
@@ -10,7 +10,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	// ===================== DATABASE STATEMENTS ===========================
 	//
 	
-	private static final String DB_NAME = "habbits__catalog";
+	private static final String DB_NAME = "habits__catalog";
 
 	private static final String DB_INIT_STATEMENT = String.format("""
 			CREATE TABLE IF NOT EXISTS %s (

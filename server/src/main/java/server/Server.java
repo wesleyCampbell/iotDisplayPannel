@@ -2,6 +2,7 @@ package server;
 
 import dataaccess.exception.*;
 import dataaccess.DatabaseManager;
+import dataaccess.habits.HabitsDAOManager;
 
 import io.javalin.*;
 
@@ -19,6 +20,8 @@ public class Server {
 	//
 	
 	private final Javalin javalin;
+
+	private HabitsDAOManager habitsDAO;
 	
 	public Server() {
 		// Initialize server
@@ -39,6 +42,13 @@ public class Server {
 			DatabaseManager.createDatabase();
 		} catch (DataAccessException ex) {
 			throw new RuntimeException("Database failed to load", ex);
+		}
+
+		// Init the connection to the habits database
+		try {
+			this.habitsDAO = new HabitsDAOManager();
+		} catch (DataAccessException ex) {
+			throw new RuntimeException("Failed to load habit database");
 		}
 	}
 
