@@ -18,7 +18,9 @@ public class HabbitsDAO extends SQLDatabaseDAO {
 				`name` VARCHAR(256) NOT NULL,
 				`description` TEXT,
 				`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-				`is_active` BOOLEAN DEFAULT TRUE""", DB_NAME);
+				`is_active` BOOLEAN DEFAULT TRUE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+			""", DB_NAME);
 
 	//
 	// ======================== CONSTRUCTORS =========================

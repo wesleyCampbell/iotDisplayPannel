@@ -24,7 +24,8 @@ public class HistoryDAO extends SQLDatabaseDAO {
 					ON DELETE RESTRICT,
 
 				CONSTRAINT unique_habit_per_day
-					UNIQUE (`habit_id`, `completion_date`)""",
+					UNIQUE (`habit_id`, `completion_date`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci""",
 			DB_NAME);
 	
 	//
