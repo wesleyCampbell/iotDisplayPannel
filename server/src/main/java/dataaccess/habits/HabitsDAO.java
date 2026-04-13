@@ -1,0 +1,30 @@
+package dataaccess.habbits;
+
+import dataaccess.SQLDatabaseDAO;
+import dataaccess.exception.*;
+
+import java.sql.SQLException;
+
+public class HabbitsDAO extends SQLDatabaseDAO {
+	//
+	// ===================== DATABASE STATEMENTS ===========================
+	//
+	
+	private static final String DB_NAME = "habbits__catalog";
+
+	private static final String DB_INIT_STATEMENT = String.format("""
+			CREATE TABLE IF NOT EXISTS %s (
+				`id` SERIAL PRIMARY KEY,
+				`name` VARCHAR(256) NOT NULL,
+				`description` TEXT,
+				`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				`is_active` BOOLEAN DEFAULT TRUE""", DB_NAME);
+
+	//
+	// ======================== CONSTRUCTORS =========================
+	//
+	
+	public HabbitsDAO() throws DataAccessException {
+		super(DB_INIT_STATEMENT);
+	}
+}
