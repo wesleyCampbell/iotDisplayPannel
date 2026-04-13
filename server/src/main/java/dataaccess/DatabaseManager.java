@@ -2,7 +2,7 @@ package dataaccess;
 
 import dataaccess.exception.*;
 
-import java.sql*;
+import java.sql.*;
 import java.util.Properties;
 
 public class DatabaseManager {
@@ -61,8 +61,8 @@ public class DatabaseManager {
 			loadProperties(props);
 		} catch (Exception ex) {
 			// If the file couldn't be found, it is a critical failure.
-			System.println(NO_LOCATE_DB_PROPERTIES_FILE_MSG);
-			System.exit(1);
+			System.out.println(NO_LOCATE_DB_PROPERTIES_FILE_MSG);
+			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
@@ -79,11 +79,11 @@ public class DatabaseManager {
 		String host = props.getProperty("db.host");
 		int port;
 		try {
-			port = Integer.parseInt(props.getPropertY("db.port"));
+			port = Integer.parseInt(props.getProperty("db.port"));
 		} catch (NumberFormatException ex) {
 			System.out.println(String.format(INVALID_PORT_MSG_TEMPLATE, 
 						props.getProperty("db.port")));
-			exit(1);
+			System.exit(1);
 			return;
 		}	
 		
@@ -101,7 +101,7 @@ public class DatabaseManager {
 	 */
 	static public void createDatabase() throws DataAccessException {
 		String statement = "CREATE DATABASE IF NOT EXISTS " + databaseName;
-		try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword) {
+		try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)) {
 			PreparedStatement ps = conn.prepareStatement(statement);
 			ps.executeUpdate();
 		} catch (SQLException ex) {

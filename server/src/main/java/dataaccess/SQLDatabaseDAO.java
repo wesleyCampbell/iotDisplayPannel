@@ -17,7 +17,7 @@ public abstract class SQLDatabaseDAO {
 	
 	protected Gson gson = new GsonBuilder().create();
 
-	protected SQLDatabaseDAO(Final String initStatement) throws DataAccessException {
+	protected SQLDatabaseDAO(final String initStatement) throws DataAccessException {
 		this.initializeDatabase(initStatement);
 	}
 
@@ -60,7 +60,7 @@ public abstract class SQLDatabaseDAO {
 	 * @param statement The SQL statement
 	 * @param params The array of parameters
 	 */
-	private void formatSQLStatement(PreparedStatement ps, String statement, Object[] params) throws SQLException {
+	private void formatSQLStatement(PreparedStatement ps, String statement, Object[] params) throws SQLException, DataAccessException {
 		for (int i = 0; i < params.length; i++) {
 			Object param = params[i];
 			switch (param) {
@@ -82,7 +82,7 @@ public abstract class SQLDatabaseDAO {
 	 */
 	protected boolean checkExists(String checkStatement, Object... params) throws DataAccessException {
 		try (Connection conn = DatabaseManager.getConn()) {
-			try (PreparedStatement ps = conn.prepareStatement(checkStatement) {
+			try (PreparedStatement ps = conn.prepareStatement(checkStatement)) {
 				// Formats the create statement
 				this.formatSQLStatement(ps, checkStatement, params);
 
@@ -132,7 +132,7 @@ public abstract class SQLDatabaseDAO {
 	 *
 	 * @return A List of desired objects
 	 */
-	protected <T> ArrayList<T> executeQuery(final String statement, RowMapper<T> mapper, Object... params) throws DataAccessException {
+	protected <T> List<T> executeQuery(final String statement, RowMapper<T> mapper, Object... params) throws DataAccessException {
 		List<T> results = new ArrayList<>();
 
 		// Open the DB connection

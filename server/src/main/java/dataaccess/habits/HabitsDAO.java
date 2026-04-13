@@ -5,7 +5,7 @@ import dataaccess.exception.*;
 
 import java.sql.SQLException;
 
-public class HabbitsDAO extends SQLDatabaseDAO {
+public class HabitsDAO extends SQLDatabaseDAO {
 	//
 	// ===================== DATABASE STATEMENTS ===========================
 	//
@@ -26,7 +26,7 @@ public class HabbitsDAO extends SQLDatabaseDAO {
 	// ======================== CONSTRUCTORS =========================
 	//
 	
-	public HabbitsDAO() throws DataAccessException {
+	public HabitsDAO() throws DataAccessException {
 		super(DB_INIT_STATEMENT);
 	}
 }

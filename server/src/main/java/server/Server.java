@@ -1,5 +1,8 @@
 package server;
 
+import dataaccess.exception.*;
+import dataaccess.DatabaseManager;
+
 import io.javalin.*;
 
 public class Server {
@@ -31,7 +34,12 @@ public class Server {
 	}
 
 	private void initDatabaseConnections() {
-
+		// Init the database
+		try {
+			DatabaseManager.createDatabase();
+		} catch (DataAccessException ex) {
+			throw new RuntimeException("Database failed to load", ex);
+		}
 	}
 
 	private void initHttpEndpoints() {
