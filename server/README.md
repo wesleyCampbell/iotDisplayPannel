@@ -3,7 +3,7 @@
 ---
 
 Author: Wesley Campbell
-Version: 1.0.0
+Version: 1.0.1
 Date: 2026-04-10
 
 ---
@@ -36,7 +36,11 @@ The endpoints for each service are:
 
 ### Change Log
 
-##### Version 1.0.0, 2026-04-10:
+##### Version 1.0.0, (2026-04-10):
   - Created initial Schema for Habbit Tracking endpoints
   - Created initial project structure
   - Created maven infrastructure 
+
+##### Version 1.0.1, (2026-04-13):
+  - Updated database schema
+  - Implemented very basic server outline that autocreates database tables
