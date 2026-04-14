@@ -8,34 +8,27 @@ public class StatsDAO extends SQLDatabaseDAO {
 	// ================= DATABASE STATEMENTS ==================
 	//
 	
-	private static final String DB_NAME = "habits__stats";
+	private static final String TABLE_NAME = "habits__stats";
 
-	private static final String DB_INIT_STATEMENT = String.format("""
-			CREATE TABLE IF NOT EXISTS %s (
-				`habit_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-				`current_streak` INTEGER NOT NULL DEFAULT 0,
-				`longest_streak` INTEGER NOT NULL DEFAULT 0,
-				`last_completed_date` DATE,
+	private static final String DB_SELECT_STAT_STATEMENT = String.format("""
+			SELECT * FROM %s WHERE habit_id=?""",
+			TABLE_NAME);
 
-				`goal_type` VARCHAR(50),
-				`goal_target` INTEGER NOT NULL,
-				
-				`streak_goal` INTEGER DEFAULT 0,
+	private static final String DB_CLEAR_STAT_TABLE_STATEMENT = String.format("""
+			TRUNCATE TABLE %s""",
+			TABLE_NAME);
 
-				`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	private static final String DB_CHECK_STAT_EXIST_STATEMENT = String.format("""
+			SELECT 1 FROM %s WHERE habit_id=?""",
+			TABLE_NAME);
 
-				CONSTRAINT fk_habbit_stats
-					FOREIGN KEY (`habit_id`)
-					REFERENCES habits__catalog(`id`)
-					ON DELETE CASCADE
-				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci""",
-			DB_NAME);
-	
+	private static final String DB_SET_COL_VAL_STATEMENT= String.format("""
+			UPDATE %s SET """, TABLE_NAME) + "%s=? WHERE habit_id=?";
 	//
 	// ======================= CONSTRUCTORS ==========================
 	//
 	
-	public StatsDAO() throws DataAccessException {
-		super(DB_INIT_STATEMENT);
+	public StatsDAO(HabitsDatabaseManager dbManager) throws DataAccessException {
+		super(TABLE_NAME, dbManager);
 	}
 }

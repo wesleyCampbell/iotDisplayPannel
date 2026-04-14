@@ -8,31 +8,44 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	// ======================= DATABASE STATEMENTS ======================
 	//
 	
-	private static final String DB_NAME = "habits__history";
+	private static final String TABLE_NAME = "habits__history";
 
-	private static final String DB_INIT_STATEMENT = String.format("""
-			CREATE TABLE IF NOT EXISTS %s (
-				`id` SERIAL PRIMARY KEY,
-				`habit_id` BIGINT UNSIGNED NOT NULL,
-				`completion_date` DATE NOT NULL,
-				`completed` BOOLEAN NOT NULL DEFAULT FALSE,
-				`notes` TEXT,
+	private static final String DB_SELECT_HISTORY_STATEMENT = String.format("""
+			SELECT * FROM %s WHERE habit_id=?""",
+			TABLE_NAME);
 
-				CONSTRAINT fk_habit
-					FOREIGN KEY (`habit_id`)
-					REFERENCES habits__catalog(`id`)
-					ON DELETE RESTRICT,
+	private static final String DB_INSERT_HISTORY_STATEMENT = String.format("""
+			INSERT INTO %s (habit_id, completed, notes) VALUES (?, ?, ?)""",
+			TABLE_NAME);
 
-				CONSTRAINT unique_habit_per_day
-					UNIQUE (`habit_id`, `completion_date`)
-				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci""",
-			DB_NAME);
+	private static final String DB_CLEAR_HISTORY_TABLE_STATEMENT = String.format("""
+				TRUNCATE TABLE %s""",
+				TABLE_NAME);
+
+	private static final String DB_DELETE_HISTORY_STATEMENT_DATE = String.format("""
+			DELETE FROM %s WHERE completion_date=?""",
+			TABLE_NAME);
+
+	private static final String DB_DELETE_HISTORY_STATEMENT_ID = String.format("""
+			DELETE FROM %s WHERE id=?""",
+			TABLE_NAME);
+
+	private static final String DB_CHECK_HISTORY_EXIST_STATEMENT = String.format("""
+			SELECT 1 FROM %s WHERE habit_id=?""",
+			TABLE_NAME);
+
+	private static final String DB_SET_COL_VAL_STATEMENT = String.format("""
+			UPDATE %s SET """, TABLE_NAME) + "%s=? WHERE habit_id=?";
 	
 	//
 	// ========================= CONSTRUCTORS =======================
 	//
 	
-	public HistoryDAO() throws DataAccessException {
-		super(DB_INIT_STATEMENT);
+	public HistoryDAO(HabitsDatabaseManager dbManager) throws DataAccessException {
+		super(TABLE_NAME, dbManager);
 	}
+
+	//
+	// ============================== DATA ACCESS METHODS ========================
+	//
 }

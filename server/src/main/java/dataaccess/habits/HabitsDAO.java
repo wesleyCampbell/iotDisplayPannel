@@ -10,23 +10,50 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	// ===================== DATABASE STATEMENTS ===========================
 	//
 	
-	private static final String DB_NAME = "habits__catalog";
+	private static final String TABLE_NAME = "habits__catalog";
 
-	private static final String DB_INIT_STATEMENT = String.format("""
-			CREATE TABLE IF NOT EXISTS %s (
-				`id` SERIAL PRIMARY KEY,
-				`name` VARCHAR(256) NOT NULL,
-				`description` TEXT,
-				`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-				`is_active` BOOLEAN DEFAULT TRUE
-				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-			""", DB_NAME);
+	private static final String DB_SELECT_HABIT_STATEMENT_NAME = String.format("""
+			SELECT * FROM %s WHERE name=?""", TABLE_NAME); 
+
+	private static final String DB_SELECT_HABIT_STATEMENT_ID = String.format("""
+			SELECT * FROM %s WHERE id=?""", TABLE_NAME); 
+	
+	private static final String DB_INSERT_HABIT_STATEMENT = String.format("""
+			INSERT INTO %s (name, description, is_active) VALUES (?, ?, ?)"""
+			, TABLE_NAME);
+
+	private static final String DB_CLEAR_HABIT_TABLE_STATEMENT = String.format("""
+			TRUNCATE TABLE %s""",
+			TABLE_NAME);
+
+	private static final String DB_DELETE_HABIT_STATEMENT_ID = String.format("""
+			DELETE FROM %s WHERE id=?""",
+			TABLE_NAME);
+
+	private static final String DB_DELETE_HABIT_STATEMENT_NAME = String.format("""
+			DELETE FROM %s WHERE name=?""",
+			TABLE_NAME);
+
+	private static final String DB_CHECK_HABIT_EXIST_STATEMENT_NAME = String.format("""
+		SELECT 1 FROM %s WHERE name=?""",
+		TABLE_NAME);
+
+	private static final String DB_CHECK_HABIT_EXIST_STATEMENT_ID = String.format("""
+		SELECT 1 FROM %s WHERE id=?""",
+		TABLE_NAME);
+
+	private static final String DB_SET_COL_VAL_STATEMENT= String.format("""
+			UPDATE %s SET """, TABLE_NAME) + "%s=? WHERE habit_id=?";
 
 	//
 	// ======================== CONSTRUCTORS =========================
 	//
 	
-	public HabitsDAO() throws DataAccessException {
-		super(DB_INIT_STATEMENT);
+	public HabitsDAO(HabitsDatabaseManager dbManager) throws DataAccessException {
+		super(TABLE_NAME, dbManager);
 	}
+
+	//
+	// ======================== DATA ACCESS METHODS =============================
+	//
 }

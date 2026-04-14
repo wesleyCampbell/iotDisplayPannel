@@ -3,127 +3,179 @@ package dataaccess;
 import dataaccess.exception.*;
 
 import java.sql.*;
-import java.util.Properties;
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
-public class DatabaseManager {
+import java.util.Properties;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.flywaydb.core.Flyway;
+
+public abstract class DatabaseManager {
 	//
-	// ==================== GLOBAL VARIABLES ==============================
+	// ============================ GLOBALS ================================
 	//
 	
 	private static final String DB_PROPERTIES_FILE = "db.properties";
+
 	private static final String DB_URL_TEMPLATE = "jdbc:mariadb://%s:%d";
-	
+
+	private static record DatabaseProperties(String name,
+									  String username,
+									  String password,
+									  String connectionUrl) {};
+
 	//
-	// ==================== MESSAGES ==============================
+	// ============================ USER MESSAGES ==========================
 	//
 	
-	private static final String NO_LOCATE_DB_PROPERTIES_FILE_MSG = String.format(
-			"ERROR: Unable to locate `%s' file. Is it in the file path?", 
-			DB_PROPERTIES_FILE);
+	private static final String NO_LOCATE_DB_PROPS_FILE_ERR_TEMPLATE = """
+		ERROR: Unable to locate property file '%s'! Is it located within the classpath?""";
 	private static final String INVALID_PORT_MSG_TEMPLATE = """
 		ERROR: Invalid database port '%s' provided. Must be an iteger value.""";
 
+
 	//
-	// ==================== DATABASE PARAMETERS ====================
+	// ============================ CONSTRUCTORS ==========================
 	//
 	
-	private static String databaseName;
-	private static String dbUsername;
-	private static String dbPassword;
-	private static String connectionUrl;
+	private final String dbPropertiesFile;
+	private final DatabaseProperties properties;
 
-	//
-	// ======================== INITIALIZATION METHODS ================
-	//
+	public DatabaseManager(String dbName) {
+		this.dbPropertiesFile = DB_PROPERTIES_FILE;
 
-	/*
-	 * Load the database from the `db.properties` file.
-	 */
-	static {
-		loadPropertiesFromResources();
+		// Load the properties
+		Properties props = this.loadPropertiesFromFile(this.dbPropertiesFile);	
+		this.properties = this.parseDatabaseProperties(dbName, props);
 	}
 
+	//
+	// ======================== INIT HELPER FUNCTIONS =========================
+	//
+
 	/**
-	 * Reads the `db.properties` file to get all the relevant information to connect to the database.
-	 */ 
-	private static void loadPropertiesFromResources() {
-		// Try to open the database property file
-		try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(DB_PROPERTIES_FILE)) {
-			if (propStream == null) { 
-				throw new Exception("Unable to load db properties file");
+	 * Takes in a string to a file and loads the properties from it into a 
+	 * `Properties` object.
+	 *
+	 * @param dpPropFile The properties file name
+	 *
+	 * @return The `Properties` object
+	 */
+	private Properties loadPropertiesFromFile(String dbPropFile) {
+		try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(dbPropFile)) {
+			if (propStream == null) {
+				throw new Exception(String.format(NO_LOCATE_DB_PROPS_FILE_ERR_TEMPLATE, dbPropFile));
 			}
 
-			// Load the file properties into a parser
 			Properties props = new Properties();
 			props.load(propStream);
-
-			// Stores the properties in the static values
-			loadProperties(props);
+			return props;
 		} catch (Exception ex) {
-			// If the file couldn't be found, it is a critical failure.
-			System.out.println(NO_LOCATE_DB_PROPERTIES_FILE_MSG);
 			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
-
+	
 	/**
-	 * Loads the properties stored in a `Properties` object into the static variables
+	 * Takes in a database name and a `Properties` object and parses the info into a
+	 * corerct `DatabaseProperties` object to store the data.
 	 *
-	 * @params props The `Property` object containing the DB properties
+	 * @param dbName The database name
+	 * @param props The `Properties` object containing the database information
+	 *
+	 * @return A `DatabaseProperties` object containing relevant database info
 	 */
-	private static void loadProperties(Properties props) {
-		databaseName = props.getProperty("db.name");
-		dbUsername = props.getProperty("db.user");
-		dbPassword = props.getProperty("db.password");
+	private DatabaseProperties parseDatabaseProperties(String dbName, Properties props) {
+		String formatStr = "db." + dbName + ".%s";
 
-		String host = props.getProperty("db.host");
+		// Extract the relevant properties
+		String username = props.getProperty(String.format(formatStr, "username"));
+		String password = props.getProperty(String.format(formatStr, "password"));
+		String host = props.getProperty(String.format(formatStr, "host"));
+		String portStr = props.getProperty(String.format(formatStr, "port"));
+
+		// Verify the port is an integer
 		int port;
 		try {
-			port = Integer.parseInt(props.getProperty("db.port"));
+			port = Integer.parseInt(portStr);
 		} catch (NumberFormatException ex) {
-			System.out.println(String.format(INVALID_PORT_MSG_TEMPLATE, 
-						props.getProperty("db.port")));
-			System.exit(1);
-			return;
-		}	
+			System.out.println(String.format(INVALID_PORT_MSG_TEMPLATE, portStr));
+			//System.exit(1);
+			throw new RuntimeException();
+		}
 		
-		connectionUrl = String.format(DB_URL_TEMPLATE, host, port);
+		// Plug info into data object
+DatabaseProperties outProps = new DatabaseProperties(
+				dbName,
+				username,
+				password,
+				String.format(DB_URL_TEMPLATE, host, port)
+				);
+
+		return outProps;
 	}
 
 	//
-	// ========================= DATABASE MANAGEMENT METHODS =======================
+	// =========================== DATABASE MANIPULATION METHODS =======================
 	//
-	
+
 	/**
-	 * Will try to create the database using the credentials in the `db.properties` file.
-	 * Upon creation error, will throw `DataAccessException` to notify that creation has 
-	 * failed.
+	 * Will try to create a database using the stored credentials.
+	 * Additionally, will create all tables defined in the `resources/db/{dbName}` directory.
+	 *
+	 * Upon creation failure, will throw a `DataAccessException` to notify.
 	 */
-	static public void createDatabase() throws DataAccessException {
-		String statement = "CREATE DATABASE IF NOT EXISTS " + databaseName;
-		try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)) {
+	public void initDatabase() throws DataAccessException {
+		String statement = "CREATE DATABASE IF NOT EXISTS " + this.properties.name(); 
+
+		// Pull out properties for readability
+		String url = properties.connectionUrl();
+		String user = properties.username();
+		String pass = properties.password();
+
+		// Make a connection to the database and execute the create statement
+		try (Connection conn = DriverManager.getConnection(url, user, pass)) {
 			PreparedStatement ps = conn.prepareStatement(statement);
 			ps.executeUpdate();
 		} catch (SQLException ex) {
-			String err = String.format("Failed to create database %s", connectionUrl);
+			String err = String.format("Failed to create database %s", this.properties.name());
 			throw new DataAccessException(err, ex);
 		}
+
+		// Initialize the database tables
+		this.createDatabaseTables();
 	}
 
 	/**
-	 * Creates a connection to the database and sets the catalog based upon the properties 
-	 * specified in `db.properties` file. Connections are short lived and should be closed when
-	 * done.
-	 * Will throw a `DataAccessException upon failure to establish connection.
+	 * Uses Flyway to manifest the database tables
 	 */
-	public static Connection getConn() throws DataAccessException {
+	private void createDatabaseTables() {
+		// Set up the connection config
+		Flyway flyway = Flyway.configure()
+			.dataSource(
+					this.properties.connectionUrl() + "/" + this.properties.name(),
+					this.properties.username(),
+					this.properties.password()
+			).locations("classpath:db/" + this.properties.name())
+			.load();
+			
+		// Automatically implement the schemas defined in `resources/db/{dbName}`
+		flyway.migrate();
+	}
+
+	public Connection getConn() throws DataAccessException {
 		try {
-			Connection conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
-			conn.setCatalog(databaseName);
+			Connection conn = DriverManager.getConnection(
+					this.properties.connectionUrl(),
+					this.properties.username(),
+					this.properties.password()
+			);
+
+			conn.setCatalog(this.properties.name());
 			return conn;
 		} catch (SQLException ex) {
-			String err = String.format("Failed to get connection to %s", connectionUrl);
+			String err = String.format("Failed to get connection to %s", this.properties.connectionUrl());
 			throw new DataAccessException(err, ex);
-		}
+		}	
 	}
 }

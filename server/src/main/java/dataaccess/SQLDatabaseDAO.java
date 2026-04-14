@@ -17,32 +17,18 @@ public abstract class SQLDatabaseDAO {
 	
 	protected Gson gson = new GsonBuilder().create();
 
-	protected SQLDatabaseDAO(final String initStatement) throws DataAccessException {
-		this.initializeDatabase(initStatement);
+	protected final String tableName;
+	protected DatabaseManager dbManager;
+
+	protected SQLDatabaseDAO(String tableName, DatabaseManager dbManager) throws DataAccessException {
+		this.tableName = tableName;
+		this.dbManager = dbManager;
 	}
 
 	//
 	// ===================================== DATABASE MANIPULATION ======================
 	//
 	
-	/**
-	 * Will take a string SQL statement that creates a database and will execute it.
-	 *
-	 * @param initStatement The DB create statement
-	 */
-	protected void initializeDatabase(final String initStatement) throws DataAccessException {
-		// Open the SQL connection
-		try (Connection conn = DatabaseManager.getConn()) {
-			// Format the SQL Statement
-			try (PreparedStatement ps = conn.prepareStatement(initStatement)) {
-				ps.executeUpdate();
-			}	
-		} catch (Exception ex) {
-			String err = String.format("Failed to execute creation statment `%s`.", initStatement);
-			throw new DataAccessException(err, ex);
-		}
-	}
-
 	/**
 	 * Throws a DataAccessException stating that an invalid object type was attempted to be inserted into the database.
 	 *
@@ -81,7 +67,7 @@ public abstract class SQLDatabaseDAO {
 	 * @return true if element exists in the DB, false otherwise
 	 */
 	protected boolean checkExists(String checkStatement, Object... params) throws DataAccessException {
-		try (Connection conn = DatabaseManager.getConn()) {
+		try (Connection conn = this.dbManager.getConn()) {
 			try (PreparedStatement ps = conn.prepareStatement(checkStatement)) {
 				// Formats the create statement
 				this.formatSQLStatement(ps, checkStatement, params);
@@ -104,7 +90,7 @@ public abstract class SQLDatabaseDAO {
 	 */
 	protected void executeStatement(final String statement) throws DataAccessException {
 		// Open the DB connection
-		try (Connection conn = DatabaseManager.getConn()) {
+		try (Connection conn = this.dbManager.getConn()) {
 			try (PreparedStatement ps = conn.prepareStatement(statement)) {
 				ps.execute();
 			}
@@ -136,7 +122,7 @@ public abstract class SQLDatabaseDAO {
 		List<T> results = new ArrayList<>();
 
 		// Open the DB connection
-		try (Connection conn = DatabaseManager.getConn()) {
+		try (Connection conn = this.dbManager.getConn()) {
 			// Format the SQL statement
 			try (PreparedStatement ps = conn.prepareStatement(statement)) {
 				this.formatSQLStatement(ps, statement, params);
@@ -166,7 +152,7 @@ public abstract class SQLDatabaseDAO {
 	 */
 	protected int executeUpdate(final String statement, Object...params) throws DataAccessException {
 		// Open the DB connection
-		try (Connection conn = DatabaseManager.getConn()) {
+		try (Connection conn = this.dbManager.getConn()) {
 			try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
 			this.formatSQLStatement(ps, statement, params);
 
