@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package com.projectganymede.iot;
+
+option java_multiple_files = true;
+option java_package = "com.projectganymede.iot.api.habit";
+option java_outer_classname = "HabitStats";
+
+//
+// ========================= FULL DATA OBJECTS ======================
+// 
+
+enum GOAL_TYPE {
+	GOAL_TYPE_UNSPECIFIED = 0;
+	GOAL_TYPE_DAILY = 1;
+	GOAL_TYPE_WEEKLY = 2;
+	GOAL_TYPE_MONTHLY = 3;
+	GOAL_TYPE_YEARLY = 4;
+}
+
+message HabitStatVerbose {
+	uint64 habit_id = 1;
+
+	uint32 current_day_streak = 2;
+	uint32 longest_day_steak = 3;
+	
+	GOAL_TYPE goal_type = 4;
+	uint32 goal_target = 5;
+
+	uint32 longest_goal_streak = 6;
+	uint32 current_goal_streak = 7;
+}
+
+message HabitGoal {
+	uint64 habit_id = 1;
+	GOAL_TYPE goal_type = 2;
+	uint32 goal_target = 3;
+}
+
+message HabitStreak {
+	uint32 current_day_streak = 1;
+	uint32 longest_day_streak = 2;
+	uint32 current_goal_streak = 3;
+	uint32 longest_goal_streak = 4; 
+}
+
+// 
+// ========================== API REQUESTS ==================================
+//
+
+// Get all info from a HabitStat by its id
+
+message GetHabitStatRequest {
+	uint64 habit_id = 1;
+}
+
+message GetHabitStatResponse {
+	HabitStatVerbose stats = 1;
+}
+
+// Get the habit goal info by its id
+
+message GetHabitGoalRequest {
+	uint64 habit_id = 1;
+}
+
+message GetHabitGoalResponse {
+	HabitGoal goal_stats = 1;
+}
+
+// Get the habit streak info by its id
+
+message GetHabitStreakRequest {
+	uint64 habit_id = 1;
+}
+
+message GetHabitStreakResponse {
+	HabitStreak streak_stats = 1;
+}
+

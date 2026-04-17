@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package com.projectganymede.iot;
+
+import "date.proto";
+
+option java_multiple_files = true;
+option java_package = "com.projectganymede.iot.api.habit";
+option java_outer_classname = "HabitCatalog";
+
+// 
+// =================== FULL DATA OBJECTS =====================
+//
+
+message HabitEntry {
+	uint64 habit_id = 1;
+	string name = 2;
+	string description = 3;
+	bool active = 5;
+}
+
+//
+// ======================== API REQUESTS =======================
+//
+
+// Get a HabitEntry by its id
+
+message GetHabitEntryRequest {
+	uint64 habit_id = 1;
+}
+
+message GetHabitCatalogRequest {
+	uint64 number_limit = 1;
+}
+
+// Get the entire habit catalog
+
+message GetHabitEntryResponse {
+	HabitEntry habit_data;
+}
+
+message GetHabitCatalogResponse {
+	repeated HabitEntry habit_data_list = 1;
+}	
+

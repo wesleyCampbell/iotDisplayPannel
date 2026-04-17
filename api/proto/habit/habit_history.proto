@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package com.projectganymede.iot;
+
+import "lib/google/type/date.proto";
+
+option java_multiple_files = true;
+option java_package = "com.projectganymede.iot.api.habit";
+option java_outer_classname = "HabitHistory";
+
+//
+// ======================= FULL DATA OBJECTS ==========================
+//
+
+message HabitHistory {
+	uint64 history_id = 1;
+	uint64 habit_id = 2;
+	google.type.Date completion_date = 3;
+	bool completed = 4;
+	string notes = 5;
+}
+
+//
+// =========================== API REQUESTS =============================
+// 
+
+// Get HabitHistory entry from a unique identifier
+message GetHabitHistoryRequest {
+	uint64 history_id = 1;
+}
+
+message GetHabitHistoryResponse {
+	HabitHistory history = 1;
+}
+
+// Get all HabitHistory entries from a given date range
+message ListHabitHistoryBygoogle.type.DateRequest {
+	google.type.Date start_date = 1;
+	google.type.Date end_date = 2;
+}
+
+message ListHabitHistoryBygoogle.type.DateResponse {
+	repeated HabitHistory history_list = 1;	
+}
+
+// Get all HabitHistory entries from a given habit 
+
+message ListHabitHistoryByHabitRequest {
+	uint64 habit_id = 1;
+}
+
+message ListHabitHistoryByHabitResponse {
+	repeated HabitHistory history_list = 1;
+}
+
+// Get all completed HabitHistory entries on a date range
+
+message ListCompletedHabitHistoryBygoogle.type.DateRequest {
+	google.type.Date start_date = 1;
+	google.type.Date end_date = 2;
+}
+
+message ListCompletedHabitHistoryBygoogle.type.DateResponse {
+	repeated HabitHistory history_list = 1;
+}
+
+// Get all failed HabitHistory entries on a date range
+
+message ListFailedHabitHistoryBygoogle.type.DateRequest {
+	google.type.Date start_date = 1;
+	google.type.Date end_date = 2;
+}
+
+message ListFailedHabitHistoryBygoogle.type.DateResponse {
+	repeated HabitHistory history_list = 1;
+}
+
