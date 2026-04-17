@@ -6,7 +6,7 @@ import "lib/google/type/date.proto";
 
 option java_multiple_files = true;
 option java_package = "com.projectganymede.iot.api.habit";
-option java_outer_classname = "HabitHistory";
+option java_outer_classname = "HabitHistoryAPI";
 
 //
 // ======================= FULL DATA OBJECTS ==========================
@@ -34,12 +34,12 @@ message GetHabitHistoryResponse {
 }
 
 // Get all HabitHistory entries from a given date range
-message ListHabitHistoryBygoogle.type.DateRequest {
+message ListHabitHistoryByDateRequest {
 	google.type.Date start_date = 1;
 	google.type.Date end_date = 2;
 }
 
-message ListHabitHistoryBygoogle.type.DateResponse {
+message ListHabitHistoryByDateResponse {
 	repeated HabitHistory history_list = 1;	
 }
 
@@ -55,23 +55,23 @@ message ListHabitHistoryByHabitResponse {
 
 // Get all completed HabitHistory entries on a date range
 
-message ListCompletedHabitHistoryBygoogle.type.DateRequest {
+message ListCompletedHabitHistoryByDateRequest {
 	google.type.Date start_date = 1;
 	google.type.Date end_date = 2;
 }
 
-message ListCompletedHabitHistoryBygoogle.type.DateResponse {
+message ListCompletedHabitHistoryByDateResponse {
 	repeated HabitHistory history_list = 1;
 }
 
 // Get all failed HabitHistory entries on a date range
 
-message ListFailedHabitHistoryBygoogle.type.DateRequest {
+message ListFailedHabitHistoryByDateRequest {
 	google.type.Date start_date = 1;
 	google.type.Date end_date = 2;
 }
 
-message ListFailedHabitHistoryBygoogle.type.DateResponse {
+message ListFailedHabitHistoryByDateResponse {
 	repeated HabitHistory history_list = 1;
 }
 

@@ -2,11 +2,9 @@ syntax = "proto3";
 
 package com.projectganymede.iot;
 
-import "date.proto";
-
 option java_multiple_files = true;
 option java_package = "com.projectganymede.iot.api.habit";
-option java_outer_classname = "HabitCatalog";
+option java_outer_classname = "HabitCatalogAPI";
 
 // 
 // =================== FULL DATA OBJECTS =====================
@@ -36,7 +34,7 @@ message GetHabitCatalogRequest {
 // Get the entire habit catalog
 
 message GetHabitEntryResponse {
-	HabitEntry habit_data;
+	HabitEntry habit_data = 1;
 }
 
 message GetHabitCatalogResponse {

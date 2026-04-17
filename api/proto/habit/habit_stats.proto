@@ -4,7 +4,7 @@ package com.projectganymede.iot;
 
 option java_multiple_files = true;
 option java_package = "com.projectganymede.iot.api.habit";
-option java_outer_classname = "HabitStats";
+option java_outer_classname = "HabitStatsAPI";
 
 //
 // ========================= FULL DATA OBJECTS ======================
