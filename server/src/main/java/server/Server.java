@@ -40,7 +40,6 @@ public class Server {
 		// Init the connection to the habits database
 		try {
 			this.habitsDB = new HabitsDatabaseManager();
-			this.habitsDB.initDatabase();
 		} catch (DataAccessException ex) {
 			throw new RuntimeException("Failed to load habit database: " + ex.getMessage(), ex);
 		}

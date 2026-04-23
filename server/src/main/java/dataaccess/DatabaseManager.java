@@ -54,31 +54,6 @@ public abstract class DatabaseManager {
 		// Load the properties
 		Properties props = this.loadPropertiesFromFile(this.dbPropertiesFile);	
 		this.properties = this.parseDatabaseProperties(dbName, props);
-
-		testJOOQ();
-	}
-
-	private void testJOOQ() {
-		try (Connection conn = this.getConn()) {
-			DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-			Result<Record> result = create.select().from(HABITS__CATALOG).fetch();
-
-
-			for (Record r : result ) {
-				ULong id = r.getValue(HABITS__CATALOG.HABIT_ID);
-				String name = r.getValue(HABITS__CATALOG.NAME);
-				String desc = r.getValue(HABITS__CATALOG.DESCRIPTION);
-				Byte active = r.getValue(HABITS__CATALOG.ACTIVE);
-
-				System.out.println(String.format(
-							"ID: %s, Name: %s, Description: %s, Active: %b",
-							id, name, desc, active));
-			}
-	
-
-		} catch (DataAccessException|SQLException ex) {
-			ex.printStackTrace();
-		}
 	}
 
 	//
@@ -149,30 +124,6 @@ DatabaseProperties outProps = new DatabaseProperties(
 	//
 	// =========================== DATABASE MANIPULATION METHODS =======================
 	//
-
-	/**
-	 * Will try to create a database using the stored credentials.
-	 * Additionally, will create all tables defined in the `resources/db/{dbName}` directory.
-	 *
-	 * Upon creation failure, will throw a `DataAccessException` to notify.
-	 */
-	public void initDatabase() throws DataAccessException {
-		String statement = "CREATE DATABASE IF NOT EXISTS " + this.properties.name(); 
-
-		// Pull out properties for readability
-		String url = properties.connectionUrl();
-		String user = properties.username();
-		String pass = properties.password();
-
-		// Make a connection to the database and execute the create statement
-		try (Connection conn = DriverManager.getConnection(url, user, pass)) {
-			PreparedStatement ps = conn.prepareStatement(statement);
-			ps.executeUpdate();
-		} catch (SQLException ex) {
-			String err = String.format("Failed to create database %s", this.properties.name());
-			throw new DataAccessException(err, ex);
-		}
-	}
 
 	public Connection getConn() throws DataAccessException {
 		try {
