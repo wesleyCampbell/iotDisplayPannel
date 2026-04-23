@@ -1,4 +1,4 @@
-CREATE TABLE habits__history (
+CREATE TABLE habits_history (
 	history_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	habit_id BIGINT UNSIGNED NOT NULL,
 	completion_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -7,7 +7,7 @@ CREATE TABLE habits__history (
 
 	CONSTRAINT fk_habit
 		FOREIGN KEY (habit_id)
-		REFERENCES habits__catalog(habit_id)
+		REFERENCES habits_catalog(habit_id)
 		ON DELETE RESTRICT,
 	
 	CONSTRAINT unique_habit_per_day

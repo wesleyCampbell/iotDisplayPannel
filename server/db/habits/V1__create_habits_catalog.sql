@@ -1,4 +1,4 @@
-CREATE TABLE habits__catalog (
+CREATE TABLE habits_catalog (
 	habit_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(256) NOT NULL UNIQUE,
 	description TEXT,

@@ -165,6 +165,12 @@
 							<name>org.jooq.meta.mariadb.MariaDBDatabase</name>
 							<inputSchema>${db.name}</inputSchema>
 							<excludes>flyway_schema_history</excludes>
+							<forcedTypes>
+								<forcedType>
+									<name>BOOLEAN</name>
+									<types>TINYINT\(1\)</types>
+								</forcedType>
+							</forcedTypes>
 						</database>
 						<target>
 							<packageName>${jooq.package}</packageName>

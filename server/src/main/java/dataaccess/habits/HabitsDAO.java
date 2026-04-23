@@ -10,7 +10,7 @@ import org.jooq.types.*;
 import static org.jooq.impl.DSL.*;
 
 import static jooq.habits.Tables.*;
-import jooq.habits.tables.pojos.Habits_Catalog;
+import jooq.habits.tables.pojos.HabitsCatalog;
 
 import java.sql.SQLException;
 import java.sql.*;
@@ -19,17 +19,21 @@ import java.util.List;
 
 public class HabitsDAO extends SQLDatabaseDAO {
 	//
+	// ======================== GLOBALS =============================
+	//
+		
+	private static final String OBJ_NOT_FOUND_ERROR_TEMPLATE = "Object with Habit_ID %d not found in the database";
+
+	//
 	// ======================== CONSTRUCTORS =========================
 	//
 	
 	public HabitsDAO(HabitsDatabaseManager dbManager) throws DataAccessException {
 		super(dbManager);
-
-		System.out.println(">>> " + getHabitCatalog().toString());
 	}
 
 	//
-	// ======================== DATA ACCESS METHODS =============================
+	// ======================== DATA SELECT METHODS ==========================
 	//
 
 	/**
@@ -39,25 +43,52 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return The Habit_Catalog object
 	 */
-	public Habits_Catalog getHabit(int habitID) throws DataAccessException {
+	public HabitsCatalog getHabit(int habitID) throws DataAccessException {
 		ULong id = ULong.valueOf(habitID);
 
 		// Open the db connection
-		Habits_Catalog habit = this.executeStatement(
+		HabitsCatalog habit = this.executeStatement(
 			ctx ->
 				ctx.select()
-				.from(HABITS__CATALOG)
-				.where(HABITS__CATALOG.HABIT_ID.eq(id))
-				.fetchOneInto(Habits_Catalog.class)
+				.from(HABITS_CATALOG)
+				.where(HABITS_CATALOG.HABIT_ID.eq(id))
+				.fetchOneInto(HabitsCatalog.class)
 		);
 
 		// If it doesn't exist, throw an exception to notify caller.
 		if (habit == null) {
-			throw new ObjectNotFoundException(
-			String.format("Habit with ID %d not found in database", habitID));
+			throw new ObjectNotFoundException(String.format(OBJ_NOT_FOUND_ERROR_TEMPLATE, habitID));
 		}
 		
 		return habit;
+	}
+
+	/**
+	 * Returns all active habits
+	 *
+	 * @return A list containing all active habit entries from the database
+	 */
+	public List<HabitsCatalog> getActiveHabits() throws DataAccessException {
+		return this.executeStatement(
+			ctx -> ctx.select()
+					.from(HABITS_CATALOG)
+					.where(HABITS_CATALOG.ACTIVE.eq(true))
+					.fetchInto(HabitsCatalog.class)
+		);
+	}
+
+	/**
+	 * Returns all inactive habits
+	 *
+	 * @return A list containing all inactive habit entries from the database
+	 */
+	public List<HabitsCatalog> getInactiveHabits() throws DataAccessException {
+		return this.executeStatement(
+			ctx -> ctx.select()
+					.from(HABITS_CATALOG)
+					.where(HABITS_CATALOG.ACTIVE.eq(false))
+					.fetchInto(HabitsCatalog.class)
+		);
 	}
 
 	/**
@@ -65,11 +96,11 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return A list containing all habit entries in the database
 	 */
-	public List<Habits_Catalog> getHabitCatalog() throws DataAccessException {
+	public List<HabitsCatalog> getHabitCatalog() throws DataAccessException {
 		return this.executeStatement(
 			ctx -> ctx.select()
-					.from(HABITS__CATALOG)
-					.fetchInto(Habits_Catalog.class)
+					.from(HABITS_CATALOG)
+					.fetchInto(HabitsCatalog.class)
 		);
 	}
 
@@ -81,17 +112,81 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 * 
 	 * @return A List containing all habit entries in the database.
 	 */
-	public List<Habits_Catalog> getHabitCatalog(int limit, int offset) throws DataAccessException {
-		List<Habits_Catalog> catalog = this.executeStatement(
+	public List<HabitsCatalog> getHabitCatalog(int limit, int offset) throws DataAccessException {
+		List<HabitsCatalog> catalog = this.executeStatement(
 			ctx -> 
 				ctx.select()
-				.from(HABITS__CATALOG)
-				.orderBy(HABITS__CATALOG.HABIT_ID.asc())
+				.from(HABITS_CATALOG)
+				.orderBy(HABITS_CATALOG.HABIT_ID.asc())
 				.limit(limit)
 				.offset(offset)
-				.fetchInto(Habits_Catalog.class)
+				.fetchInto(HabitsCatalog.class)
 		);
 
 		return catalog;
 	}	
+	
+	//
+	// ======================== DATA DELETE METHODS ==========================
+	//
+
+	/**
+	 * Deletes the habit entry that matches the provided habit id from the database.
+	 *
+	 * @param habitID The habit id of the habit entry to delete
+	 */
+	public void deleteHabit(int habitID) throws DataAccessException {
+		ULong id = ULong.valueOf(habitID);
+
+		int rows_deleted = this.executeStatement(
+								ctx -> ctx.deleteFrom(HABITS_CATALOG)
+										.where(HABITS_CATALOG.HABIT_ID.eq(id))
+										.execute()
+		);
+		if (rows_deleted == 0) {
+			throw new ObjectNotFoundException(String.format(OBJ_NOT_FOUND_ERROR_TEMPLATE, habitID));
+		}
+	}
+
+	/**
+	 * Clears the entire habit catalog database
+	 */
+	public void clearHabitDatabase() throws DataAccessException {
+		this.executeStatement(
+			ctx -> ctx.truncate(HABITS_CATALOG).execute()	
+		);
+	}
+	
+	//
+	// ======================== DATA INSERT METHODS ==========================
+	//
+	
+	/**
+	 * Inserts a habit into the database.
+	 *
+	 * @param name The name of the new habit entry
+	 * @param description A description of the new habit
+	 * @param active Whether or not the new habit should be considered active
+	 */
+	public void insertHabit(String name, String description, boolean active) throws DataAccessException {
+		int rows_affected = this.executeStatement(
+			ctx -> ctx.insertInto(HABITS_CATALOG, HABITS_CATALOG.NAME, HABITS_CATALOG.DESCRIPTION, HABITS_CATALOG.ACTIVE)
+			.values(name, description, active)
+			.execute()
+		);
+
+		if (rows_affected == 0) {
+			throw new DataAccessException("Insertion failed");
+		}
+	}
+
+	/**
+	 * Inserts a habit into the database.
+	 *
+	 * @param name The name of the new habit entry
+	 * @param description A description of the new habit
+	 */
+	public void insertHabit(String name, String description) throws DataAccessException {
+		this.insertHabit(name, description, true);
+	}
 }
