@@ -10,11 +10,23 @@ public class HabitsDatabaseManager extends DatabaseManager {
 	private StatsDAO statsDAO;
 	private HabitsDAO habitsDAO;
 
-public HabitsDatabaseManager() throws DataAccessException {
+	public HabitsDatabaseManager() throws DataAccessException {
 		super(DB_NAME);
 
 		this.habitsDAO = new HabitsDAO(this);
 		this.historyDAO = new HistoryDAO(this);
 		this.statsDAO = new StatsDAO(this);
+	}
+
+	public HabitsDAO getHabitsDAO() {
+		return this.habitsDAO;
+	}
+
+	public HistoryDAO getHistoryDAO() {
+		return this.historyDAO;
+	}
+
+	public StatsDAO getStatsDAO() {
+		return this.statsDAO;
 	}
 }

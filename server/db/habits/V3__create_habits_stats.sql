@@ -25,7 +25,7 @@ CREATE TRIGGER after_insert__habits_catalog
 AFTER INSERT ON habits_catalog
 FOR EACH ROW
 BEGIN
-	INSERT INTO habits__stats (habit_id)
+	INSERT INTO habits_stats (habit_id)
 	VALUES (NEW.habit_id);
 END;
 
