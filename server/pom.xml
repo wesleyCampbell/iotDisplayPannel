@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>server</artifactId>
+	<groupId>dev.projectganymede.iot</groupId>
 	<version>1.0.3</version>
 
 	<parent>
@@ -29,6 +30,7 @@
 			</resource>
 		</resources>
 		<plugins>
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -36,6 +38,26 @@
 				<configuration>
 					<mainClass>server.ServerMain</mainClass>
 				</configuration>
+
+				<executions>
+					<execution>
+						<id>generate-databases</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>bash</executable>
+							<arguments>
+								<argument>
+									${project.basedir}/build/generate-db.sh</argument>
+							</arguments>
+							<environmentVariables>
+								<PROJ_DIR>${project.basedir}</PROJ_DIR>
+							</environmentVariables>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
@@ -56,14 +78,32 @@
 									</mainClass>
 								</manifest>
 							</archive>
-							<descriptors>
-								<descriptor>../test-dependencies-assembly.xml</descriptor>
-							</descriptors>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>	
 
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>add-jooq-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/jooq</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Protobuf used to auto-generate API message classes -->
 			<plugin>
 				<groupId>org.xolstice.maven.plugins</groupId>
 				<artifactId>protobuf-maven-plugin</artifactId>
@@ -80,6 +120,7 @@
 
 				<executions>
 					<execution>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>compile</goal>
 						</goals>
@@ -87,6 +128,56 @@
 				</executions>
 			</plugin>
 
+			<!-- Flyway used to auto-generate and migrate database schema -->
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>12.3.0</version>
+
+				<configuration>
+					<url>${flyway.url}</url>
+					<user>${flyway.user}</user>
+					<password>${flyway.password}</password>
+
+					<locations>
+						<location>${flyway.locations}</location>
+					</locations>
+
+					<baselineOnMigrate>true</baselineOnMigrate>
+				</configuration>
+			</plugin>
+
+			<!-- jOOQ used to auto-generate database schema java classes -->
+			<plugin>
+				<groupId>org.jooq</groupId>
+				<artifactId>jooq-codegen-maven</artifactId>
+				<version>3.19.0</version>
+
+				<configuration>
+					<jdbc>
+						<driver>org.mariadb.jdbc.Driver</driver>
+						<url>${db.url}</url>
+						<user>${db.user}</user>
+						<password>${db.password}</password>
+					</jdbc>
+					<generator>
+						<database>
+							<name>org.jooq.meta.mariadb.MariaDBDatabase</name>
+							<inputSchema>${db.name}</inputSchema>
+							<excludes>flyway_schema_history</excludes>
+						</database>
+						<target>
+							<packageName>${jooq.package}</packageName>
+							<directory>${jooq.output}</directory>
+						</target>
+						<generate>
+							<pojos>true</pojos>
+							<records>true</records>
+						</generate>
+					</generator>
+				</configuration>
+
+			</plugin>
 		</plugins>
 	</build>
 
@@ -120,6 +211,11 @@
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>3.21.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jooq</artifactId>
+			<version>3.19.0</version>
 		</dependency>
 	</dependencies>
 

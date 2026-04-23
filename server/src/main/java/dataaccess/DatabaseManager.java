@@ -9,7 +9,13 @@ import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.flywaydb.core.Flyway;
+import org.jooq.*;
+import org.jooq.Record;
+import org.jooq.types.*;
+import org.jooq.impl.DSL;
+import static org.jooq.impl.DSL.*;
+
+import static jooq.habits.Tables.*;
 
 public abstract class DatabaseManager {
 	//
@@ -48,6 +54,31 @@ public abstract class DatabaseManager {
 		// Load the properties
 		Properties props = this.loadPropertiesFromFile(this.dbPropertiesFile);	
 		this.properties = this.parseDatabaseProperties(dbName, props);
+
+		testJOOQ();
+	}
+
+	private void testJOOQ() {
+		try (Connection conn = this.getConn()) {
+			DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+			Result<Record> result = create.select().from(HABITS__CATALOG).fetch();
+
+
+			for (Record r : result ) {
+				ULong id = r.getValue(HABITS__CATALOG.HABIT_ID);
+				String name = r.getValue(HABITS__CATALOG.NAME);
+				String desc = r.getValue(HABITS__CATALOG.DESCRIPTION);
+				Byte active = r.getValue(HABITS__CATALOG.ACTIVE);
+
+				System.out.println(String.format(
+							"ID: %s, Name: %s, Description: %s, Active: %b",
+							id, name, desc, active));
+			}
+	
+
+		} catch (DataAccessException|SQLException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	//
@@ -141,26 +172,6 @@ DatabaseProperties outProps = new DatabaseProperties(
 			String err = String.format("Failed to create database %s", this.properties.name());
 			throw new DataAccessException(err, ex);
 		}
-
-		// Initialize the database tables
-		this.createDatabaseTables();
-	}
-
-	/**
-	 * Uses Flyway to manifest the database tables
-	 */
-	private void createDatabaseTables() {
-		// Set up the connection config
-		Flyway flyway = Flyway.configure()
-			.dataSource(
-					this.properties.connectionUrl() + "/" + this.properties.name(),
-					this.properties.username(),
-					this.properties.password()
-			).locations("classpath:db/" + this.properties.name())
-			.load();
-			
-		// Automatically implement the schemas defined in `resources/db/{dbName}`
-		flyway.migrate();
 	}
 
 	public Connection getConn() throws DataAccessException {
