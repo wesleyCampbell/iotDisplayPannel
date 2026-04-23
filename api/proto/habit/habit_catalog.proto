@@ -26,18 +26,23 @@ message HabitEntry {
 message GetHabitEntryRequest {
 	uint64 habit_id = 1;
 }
-
-message GetHabitCatalogRequest {
-	uint64 number_limit = 1;
-}
-
-// Get the entire habit catalog
-
 message GetHabitEntryResponse {
 	HabitEntry habit_data = 1;
 }
 
+// Get the entire habit catalog
+message GetHabitCatalogRequest {
+	uint64 number_limit = 1;
+}
 message GetHabitCatalogResponse {
 	repeated HabitEntry habit_data_list = 1;
 }	
 
+// Delete a habit entry
+message DeleteHabitEntryRequest {
+	uint64 habit_id = 1;
+}
+
+message DeleteHabitEntryResponse {
+	uint64 habit_id = 1;
+}
