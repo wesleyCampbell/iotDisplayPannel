@@ -3,7 +3,6 @@ package dataaccess;
 import dataaccess.exception.*;
 
 import java.sql.*;
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
 import java.util.Properties;
 import java.util.List;
@@ -17,7 +16,7 @@ import static org.jooq.impl.DSL.*;
 
 import static jooq.habits.Tables.*;
 
-public abstract class DatabaseManager {
+public class DatabaseManager {
 	//
 	// ============================ GLOBALS ================================
 	//
@@ -26,7 +25,7 @@ public abstract class DatabaseManager {
 
 	private static final String DB_URL_TEMPLATE = "jdbc:mariadb://%s:%d";
 
-	private static record DatabaseProperties(String name,
+	protected static record DatabaseProperties(String name,
 									  String username,
 									  String password,
 									  String connectionUrl) {};
@@ -48,12 +47,27 @@ public abstract class DatabaseManager {
 	private final String dbPropertiesFile;
 	private final DatabaseProperties properties;
 
+	/**
+	 * Default constructor that assumes a MariaDB database.
+	 *
+	 * @param dbName The name of the database that the DatabaseManager will connect to
+	 */
 	public DatabaseManager(String dbName) {
 		this.dbPropertiesFile = DB_PROPERTIES_FILE;
 
 		// Load the properties
 		Properties props = this.loadPropertiesFromFile(this.dbPropertiesFile);	
 		this.properties = this.parseDatabaseProperties(dbName, props);
+	}
+
+	/**
+	 * Constructor that allows manual setting of database properties
+	 *
+	 * @param properties The Database properties
+	 */
+	public DatabaseManager(DatabaseProperties properties) {
+		this.dbPropertiesFile = "";
+		this.properties = properties;
 	}
 
 	//
@@ -122,9 +136,27 @@ DatabaseProperties outProps = new DatabaseProperties(
 	}
 
 	//
+	// =========================== GETTERS ================================
+	//
+	
+	public DatabaseProperties getProperties() {
+		return this.properties;
+	}
+
+	//
 	// =========================== DATABASE MANIPULATION METHODS =======================
 	//
 
+	/**
+	 * Forms a connection to the database and returns a Connection object
+	 * Note that the connection needs to be closed after use. The best way 
+	 * to do so is to only call `getConn` in a try-with-resources block:
+	 * ```
+	 * try (Connection conn = databaseManager.getConn() {} ...
+	 * ```
+	 *
+	 * @return a Connection to the database
+	 */
 	public Connection getConn() throws DataAccessException {
 		try {
 			Connection conn = DriverManager.getConnection(

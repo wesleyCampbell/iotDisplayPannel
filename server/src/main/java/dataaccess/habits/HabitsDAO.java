@@ -2,6 +2,7 @@ package dataaccess.habits;
 
 import dataaccess.SQLDatabaseDAO;
 import dataaccess.exception.*;
+import dataaccess.DatabaseManager;
 
 import org.jooq.*;
 import org.jooq.impl.*;
@@ -28,7 +29,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	// ======================== CONSTRUCTORS =========================
 	//
 	
-	public HabitsDAO(HabitsDatabaseManager dbManager) throws DataAccessException {
+	public HabitsDAO(DatabaseManager dbManager) throws DataAccessException {
 		super(dbManager);
 	}
 

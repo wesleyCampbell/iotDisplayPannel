@@ -19,7 +19,7 @@ CREATE TABLE habits_stats (
 )
 ENGINE=InnoDB 
 DEFAULT CHARSET=utf8mb4 
-COLLATE=utf8mb4_0900_as_cs;
+COLLATE=utf8mb4_unicode_ci;
 
 CREATE TRIGGER after_insert__habits_catalog
 AFTER INSERT ON habits_catalog

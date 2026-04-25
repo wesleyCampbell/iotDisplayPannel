@@ -40,7 +40,7 @@ public abstract class SQLDatabaseDAO {
 		// Open the DB connection
 		try (Connection conn = this.dbManager.getConn()) {
 			// Make the DSL context and apply the statement operators
-			DSLContext ctx = DSL.using(conn, SQLDialect.MYSQL);
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
 			return block.apply(ctx);
 		} catch (SQLException ex) {
 			throw new DataAccessException(ex.getMessage(), ex);
