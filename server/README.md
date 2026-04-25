@@ -3,7 +3,7 @@
 ---
 
 Author: Wesley Campbell
-Version: 1.0.2
+Version: 1.0.4
 Date: 2026-04-10
 
 ---
@@ -92,6 +92,11 @@ The endpoints for each service are:
 | api/habit/stats | GET     | Get the habit stats              | JSON serialization of relevant stats  |
 
 ### Change Log
+
+##### Version 1.0.4, (2026-04-24):
+  - Added in Data access testing infrastructure
+  - Tests will now be performed in temporary database run in a container
+  - DatabaseManager class modified to allow arbitrary database properties instead of just `db.properties`
 
 ##### Version 1.0.3, (2026-04-23):
   - Refactored the data access classes to use jOOQ rather than vanilla JDBC
