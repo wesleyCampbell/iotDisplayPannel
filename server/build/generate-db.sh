@@ -9,7 +9,7 @@ fi
 
 # PROJ_DIR=$1
 DB_DIR="$PROJ_DIR/db"
-PACKAGE=""
+PACKAGE="model.jooq"
 
 source "$DB_DIR/jooq.conf"
 
@@ -43,8 +43,8 @@ for db in $DB_DIR/*; do
 	mvn jooq-codegen:generate \
 		-Ddb.name=$name \
 		-Ddb.url=$db_url \
-		-Djooq.package=jooq.$name \
-		-Djooq.output=target/generated-sources/ \
+		-Djooq.package=$PACKAGE.$name \
+		-Djooq.output=target/generated-sources/jooq/java \
 		-Ddb.user=$jooq_user \
 		-Ddb.password=$jooq_password
 

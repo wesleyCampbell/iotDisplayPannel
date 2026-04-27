@@ -10,8 +10,8 @@ import org.jooq.Record;
 import org.jooq.types.*;
 import static org.jooq.impl.DSL.*;
 
-import static jooq.habits.Tables.*;
-import jooq.habits.tables.pojos.HabitsCatalog;
+import static model.jooq.habits.Tables.*;
+import model.jooq.habits.tables.pojos.HabitsCatalog;
 
 import java.sql.SQLException;
 import java.sql.*;

@@ -89,14 +89,14 @@
 				<version>3.5.0</version>
 				<executions>
 					<execution>
-						<id>add-jooq-sources</id>
+						<id>add-generated-sources</id>
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>add-source</goal>
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.build.directory}/generated-sources/jooq</source>
+								<source>${project.build.directory}/generated-sources/</source>
 							</sources>
 						</configuration>
 					</execution>

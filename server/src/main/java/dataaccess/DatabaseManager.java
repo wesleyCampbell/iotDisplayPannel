@@ -14,7 +14,7 @@ import org.jooq.types.*;
 import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
 
-import static jooq.habits.Tables.*;
+import static model.jooq.habits.Tables.*;
 
 public class DatabaseManager {
 	//
