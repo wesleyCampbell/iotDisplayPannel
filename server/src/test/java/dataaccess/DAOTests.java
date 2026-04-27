@@ -11,6 +11,8 @@ import static org.jooq.impl.DSL.*;
 import java.sql.*;
 import java.sql.Statement;
 
+import java.util.function.Consumer;
+
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -45,9 +47,9 @@ public abstract class DAOTests {
 	protected DSLContext ctx;
 	protected String databaseName;
 
-	protected Runnable dbOperator;
+	protected Consumer<DatabaseManager> dbOperator;
 
-	protected DAOTests(String databaseName, Runnable dbOperator) {
+	protected DAOTests(String databaseName, Consumer<DatabaseManager> dbOperator) {
 		this.databaseName = databaseName;
 		this.dbOperator = dbOperator;
 	}
@@ -109,7 +111,7 @@ public abstract class DAOTests {
 
 		// Get the db ready for the test.
 		this.resetDB();
-		this.dbOperator.run();
+		this.dbOperator.accept(this.dbManager);
 	}
 
 	/**

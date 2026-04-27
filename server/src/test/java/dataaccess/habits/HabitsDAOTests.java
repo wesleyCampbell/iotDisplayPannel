@@ -5,12 +5,14 @@ import org.junit.jupiter.api.*;
 import org.jooq.*;
 import org.jooq.impl.*;
 import static org.jooq.impl.DSL.*;
-import static jooq.habits.Tables.*;
+
+import static model.jooq.habits.Tables.*;
 
 import java.sql.*;
 
 import dataaccess.DAOTests;
 import dataaccess.exception.*;
+import dataaccess.DatabaseManager;
 
 public class HabitsDAOTests extends DAOTests {
 	//
@@ -27,7 +29,7 @@ public class HabitsDAOTests extends DAOTests {
 	private HabitsDAO habitsDAO;
 
 	public HabitsDAOTests() {
-		super(DB_NAME, () -> System.out.println("<<<<<>>>>>>TEST"));
+		super(DB_NAME, (dbManager) -> initTestTables(dbManager));
 		
 		try {
 			this.habitsDAO = new HabitsDAO(this.dbManager);
@@ -41,12 +43,23 @@ public class HabitsDAOTests extends DAOTests {
 	//
 	
 	/**
+	 * Wrapper function for `insertHabitsNum` method that uses default
+	 * values. Used for the test database autoconfiguration function
+	 * passed into the parent.
+	 */
+	private static void initTestTables(DatabaseManager dbManager) {
+		insertHabitsNum(dbManager, 3, true);
+		insertHabitsNum(dbManager, 2, false);
+	}
+	
+	/**
 	 * Helper function that inserts n number of habits into the database
 	 *
+	 * @param dbManager The database manager to make the connection with
 	 * @param num The number of habits to insert
 	 * @param active Whether the habits should be active or inactive
 	 */
-	private void insertHabitsNum(int num, boolean active) {
+	private static void insertHabitsNum(DatabaseManager dbManager, int num, boolean active) {
 		try (Connection conn = dbManager.getConn()) {
 			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
 
