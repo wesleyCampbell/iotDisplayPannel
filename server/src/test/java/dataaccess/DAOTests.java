@@ -80,7 +80,7 @@ public abstract class DAOTests {
 
 		// Generate the database properties
 		DatabaseProperties dbProps = new DatabaseProperties(
-				databaseName,
+				this.databaseName,
 				DB_USER,
 				DB_PASSWORD,
 				db.getJdbcUrl()
@@ -158,7 +158,7 @@ public abstract class DAOTests {
 	protected void applyDatabaseMigrations(DatabaseManager dbManager) {
 		// extract db properties
 		DatabaseProperties props = dbManager.getProperties();
-		String url = props.connectionUrl();
+		String url = props.connectionUrl().replace(DB_NAME, this.databaseName);
 		String user = props.username();
 		String password = props.password();
 
