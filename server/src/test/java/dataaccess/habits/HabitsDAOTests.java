@@ -25,7 +25,10 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 	// ================ TEST INITIALIZATION =================
 	//
 	
-	@BeforeEach
+	/**
+	 * Makes sure that the DAO is hooked up to the correct database for each test
+	 */
+	@BeforeAll
 	protected void connectDAO() {
 		try {
 			if (this.dbManager == null) {
