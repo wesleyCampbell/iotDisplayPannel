@@ -25,6 +25,8 @@ public class HabitsDAO extends SQLDatabaseDAO {
 		
 	private static final String OBJ_NOT_FOUND_ERROR_TEMPLATE = "Object with Habit_ID %d not found in the database";
 
+	private static final String OBJ_NOT_FOUND_NAME_ERROR_TEMPLATE = "Object with name %s not found in the database";
+
 	//
 	// ======================== CONSTRUCTORS =========================
 	//
@@ -61,6 +63,32 @@ public class HabitsDAO extends SQLDatabaseDAO {
 			throw new ObjectNotFoundException(String.format(OBJ_NOT_FOUND_ERROR_TEMPLATE, habitID));
 		}
 		
+		return habit;
+	}
+
+	/** 
+	 * Given a habit's name, this method will try to fetch the associated habit_catalog
+	 * object from the database. If not found, will throw an `ObjectNotFoundException`
+	 *
+	 * @param name The name of the habit to fetch
+	 *
+	 * @return The HabitCatalog object
+	 */
+	public HabitsCatalog getHabit(String name) throws DataAccessException {
+		HabitsCatalog habit = this.executeStatement(
+			ctx ->
+				ctx.select()
+				.from(HABITS_CATALOG)
+				.where(HABITS_CATALOG.NAME.eq(name))
+				.fetchOneInto(HabitsCatalog.class)
+		);
+
+		if (habit == null) {
+			throw new ObjectNotFoundException(
+					String.format(OBJ_NOT_FOUND_NAME_ERROR_TEMPLATE, name)
+			);
+		}
+
 		return habit;
 	}
 
@@ -154,7 +182,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 */
 	public void clearHabitDatabase() throws DataAccessException {
 		this.executeStatement(
-			ctx -> ctx.truncate(HABITS_CATALOG).execute()	
+			ctx -> ctx.deleteFrom(HABITS_CATALOG).execute()	
 		);
 	}
 	

@@ -42,6 +42,8 @@ public abstract class SQLDatabaseDAO {
 			// Make the DSL context and apply the statement operators
 			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
 			return block.apply(ctx);
+		} catch (SQLIntegrityConstraintViolationException ex) {
+			throw new ForeignConstraintException(ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			throw new DataAccessException(ex.getMessage(), ex);
 		}
