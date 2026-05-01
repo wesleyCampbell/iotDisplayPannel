@@ -4,17 +4,10 @@ import dataaccess.SQLDatabaseDAO;
 import dataaccess.exception.*;
 import dataaccess.DatabaseManager;
 
-import org.jooq.*;
-import org.jooq.impl.*;
-import org.jooq.Record;
 import org.jooq.types.*;
-import static org.jooq.impl.DSL.*;
 
 import static model.jooq.habits.Tables.*;
 import model.jooq.habits.tables.pojos.HabitsCatalog;
-
-import java.sql.SQLException;
-import java.sql.*;
 
 import java.util.List;
 
