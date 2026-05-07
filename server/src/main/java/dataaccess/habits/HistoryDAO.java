@@ -101,18 +101,12 @@ public class HistoryDAO extends SQLDatabaseDAO {
 		ULong id = ULong.valueOf(habitID);
 
 		// Confirm that the habit exists in the database
-		boolean exists = this.executeStatement(
-			ctx -> ctx.fetchExists(
-				DSL.selectFrom(HABITS_HISTORY)
-				.where(HABITS_HISTORY.HABIT_ID.eq(id))
-			)
-		);
-		if (!exists) {
+		if (!this.entryExists(HABITS_HISTORY, HABITS_HISTORY.HABIT_ID, id)) {
 			throw new ObjectNotFoundException(String.format(
 				HABIT_ID_NOT_FOUND_TEMPLATE, habitID)
 			);
 		}
-
+		
 		// Return the completed history entries
 		return this.executeStatement(
 			ctx -> ctx.select()
@@ -177,7 +171,19 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param historyID The history id of the entry to delete
 	 */
 	public void deleteHistoryEntry(int historyId) throws DataAccessException {
+		ULong id = ULong.valueOf(historyId);
 
+		int rows_deleted = this.executeStatement(
+				ctx -> ctx.deleteFrom(HABITS_HISTORY)
+					.where(HABITS_HISTORY.HISTORY_ID.eq(id))
+					.execute()
+		);
+
+		if (rows_deleted == 0) {
+			throw new ObjectNotFoundException(String.format(
+				OBJ_NOT_FOUND_TEMPLATE, historyId)
+			);
+		}
 	}
 
 	/**
@@ -186,7 +192,21 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param habitsID The id of the habit
 	 */
 	public void deleteHabitsHistory(int habitsId) throws DataAccessException {
+		ULong id = ULong.valueOf(habitsId);
+		
+		// Assert that there are entries to delete
+		if (!this.entryExists(HABITS_HISTORY, HABITS_HISTORY.HABIT_ID, id)) {
+			throw new ObjectNotFoundException(String.format(
+				HABIT_ID_NOT_FOUND_TEMPLATE, habitsId)
+			);
+		}
 
+		// Perform the deletion
+		this.executeStatement(
+			ctx -> ctx.deleteFrom(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HABIT_ID.eq(id))
+				.execute()
+		);
 	}
 
 	/**
@@ -195,14 +215,20 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param date The date to delete all entries from
 	 */
 	public void deleteHabitsHistory(LocalDate date) throws DataAccessException {
-
+		this.executeStatement(
+			ctx -> ctx.deleteFrom(HABITS_HISTORY)
+				.where(HABITS_HISTORY.COMPLETION_DATE.eq(date))
+				.execute()
+		);
 	}
 
 	/**
 	 * Clears the entire database and resets it to its default state.
 	 */
 	public void clearHabitHistoryDatabase() throws DataAccessException {
-
+		this.executeStatement(
+			ctx -> ctx.deleteFrom(HABITS_HISTORY).execute()
+		);
 	}
 
 	//

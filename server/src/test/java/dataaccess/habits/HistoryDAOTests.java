@@ -97,6 +97,11 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	// ========================== SELECTION TESTS ======================
 	//
 	
+	/**
+	 * Verifies that getHistoryEntry() returns the correct history record
+	 * for a valid entry ID and that the returned record is associated
+	 * with the expected habit.
+	 */
 	@Test 
 	public void getHistoryEntryIdTest_Correct() {
 		int historyID = 1;
@@ -114,6 +119,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		}
 	}
 
+	/**
+	 * Verifies that getHistoryEntry() throws an ObjectNotFoundException
+	 * when the requested history entry ID does not exist.
+	 */
 	@Test
 	public void getHistoryEntryIdTest_Incorrect() {
 		final int incorrectHistoryId = HABIT_NUM_TRUE * HISTORY_NUM_PER_HABIT_DATE + 30;
@@ -123,6 +132,11 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		);	
 	}
 
+	/**
+	 * Verifies that getHabitsHistory() correctly retrieves all history entries
+	 * associated with a given valid habit ID and that the number of returned
+	 * entries matches the expected count.
+	 */
 	@Test 
 	public void getHabitsHistoryHabitTest_Correct() {
 		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
@@ -136,6 +150,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		}
 	}
 
+	/**
+	 * Verifies that getHabitsHistory() throws an ObjectNotFoundException
+	 * when attempting to retrieve history entries for a habit ID that does not exist.
+	 */
 	@Test
 	public void getHabitsHistoryHabitTest_Incorrect() {
 		final int incorrectHabitId = HABIT_NUM_TRUE + 1;
@@ -145,6 +163,11 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		);
 	}
 
+	/**
+	 * Verifies that getHabitsHistory() correctly retrieves all history entries
+	 * for valid dates, returning the expected number of entries per date, and
+	 * returns an empty list when no entries exist for a given invalid date.
+	 */
 	@Test
 	public void getHabitsHistoryDateTest_Correct() {
 		// Test that all DATE1 dates were collected
@@ -171,6 +194,11 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		Assertions.assertTrue(habitsDateInv.isEmpty());
 	}
 
+	/**
+	 * Verifies that getCompletedHistory() correctly retrieves all completed
+	 * habit history entries across all valid habit IDs and that the total
+	 * number of completed entries matches the expected count.
+	 */
 	@Test 
 	public void getCompletedHabitsHistoryTest_Correct() {
 		int completedNum = 0;
@@ -187,6 +215,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		Assertions.assertEquals(HABIT_NUM_TRUE, completedNum);
 	}
 
+	/**
+	 * Verifies that getCompletedHistory() throws an ObjectNotFoundException
+	 * when attempting to retrieve completed history for a non-existent habit ID.
+	 */
 	@Test 
 	public void getCompletedHabitsHistoryTest_Incorrect() {
 		final int incorrectHabitId = HABIT_NUM_TRUE + 1;
@@ -196,6 +228,11 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		);
 	}
 
+	/**
+	 * Verifies that getUncompletedHistory() correctly retrieves all uncompleted
+	 * habit history entries across all valid habit IDs and that the total number
+	 * of returned entries matches the expected count.
+	 */
 	@Test
 	public void getUncompletedHabitsHistoryTest_Correct() {
 		int uncompletedNum = 0;
@@ -212,48 +249,168 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		Assertions.assertEquals(HABIT_NUM_TRUE, uncompletedNum);
 	}
 
+	/**
+	 * Verifies that getUncompletedHistory() throws an ObjectNotFoundException
+	 * when attempting to retrieve uncompleted history for a non-existent habit ID.
+	 */
 	@Test
 	public void getUncompletedHabitsHistoryTest_Incorrect() {
+		final int incorrectHabitId = HABIT_NUM_TRUE + 1;
 
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.getUncompletedHistory(incorrectHabitId)
+		);
 	}
 
 	//
 	// ========================== DELETION TESTS ======================
 	//
 	
+	/**
+	 * Verifies that deleteHistoryEntry() successfully removes each existing
+	 * history entry from the database, that the entry no longer exists after
+	 * deletion, and that the total table size decreases accordingly until empty.
+	 */
 	@Test
 	public void deleteHistoryEntryTest_Correct() {
+		for (int i = 0; i < HABIT_NUM_TRUE * HISTORY_NUM_PER_HABIT_DATE; i++) {
+			int id = i + 1;
 
+			final int currentHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+			// Assert that an entry exists
+			Assertions.assertTrue(this.entryExists(
+					HABITS_HISTORY, HABITS_HISTORY.HISTORY_ID, ULong.valueOf(id))
+			);
+
+			Assertions.assertDoesNotThrow(
+				() -> this.historyDAO.deleteHistoryEntry(id)
+			);
+
+			// Assert that the entry no longer exists in the database.
+			Assertions.assertFalse(this.entryExists(
+					HABITS_HISTORY, HABITS_HISTORY.HISTORY_ID, ULong.valueOf(id))
+			);
+
+			final int finalHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+			Assertions.assertEquals(currentHistoryNum - 1, finalHistoryNum);
+		}
+
+		Assertions.assertEquals(0, this.getTableLength(HABITS_HISTORY));
 	}
 
+	/**
+	 * Verifies that deleteHistoryEntry() throws an ObjectNotFoundException
+	 * when attempting to delete a non-existent history entry and ensures that
+	 * the database state remains unchanged after the failed deletion attempt.
+	 */
 	@Test 
 	public void deleteHistoryEntryTest_Incorrect() {
+		int incorrectHistoryId = HABIT_NUM_TRUE * HISTORY_NUM_PER_HABIT_DATE + 1;
 
+		final int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.deleteHistoryEntry(incorrectHistoryId)
+		);
+
+		final int finalHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		Assertions.assertEquals(initialHistoryNum, finalHistoryNum);
 	}
 
+	/**
+	 * Verifies that deleteHabitsHistory() successfully removes all history
+	 * entries associated with each valid habit ID and that no entries remain
+	 * for those habits after deletion.
+	 */
 	@Test
 	public void deleteHabitsHistoryHabitTest_Correct() {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
+			final int id = i + 1;
+			
+			Assertions.assertDoesNotThrow(
+				() -> this.historyDAO.deleteHabitsHistory(id)
+			);
 
+			int finalHistoryNum = this.getEntryNum(
+				HABITS_HISTORY, HABITS_HISTORY.HABIT_ID, ULong.valueOf(id)
+			);
+
+			Assertions.assertEquals(0, finalHistoryNum);
+		}
 	}
 
+	/**
+	 * Verifies that deleteHabitsHistory() throws an ObjectNotFoundException
+	 * when attempting to delete history entries for a non-existent habit ID
+	 * and ensures that the database state remains unchanged.
+	 */
 	@Test
 	public void deleteHabitsHistoryHabitTest_Incorrect() {
+		final int invalidHabitId = HABIT_NUM_TRUE + 1;
+		int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
 
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.deleteHabitsHistory(invalidHabitId)
+		);
+
+		int finalHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		Assertions.assertEquals(initialHistoryNum, finalHistoryNum);
 	}
 
+	/**
+	 * Verifies that deleteHabitsHistory() successfully deletes all history
+	 * entries associated with a given completion date and ensures that no
+	 * entries remain for that date after deletion.
+	 */
 	@Test
 	public void deleteHabitsHistoryDateTest_Correct() {
+		Assertions.assertDoesNotThrow(
+			() -> this.historyDAO.deleteHabitsHistory(DATE1)
+		);
 
+		int finalHistoryNum = this.getEntryNum(
+			HABITS_HISTORY, HABITS_HISTORY.COMPLETION_DATE, DATE1
+		);
+
+		Assertions.assertEquals(0, finalHistoryNum);
 	}
 
+	/**
+	 * Verifies that deleteHabitsHistory() performs no deletion and does not
+	 * modify the database when provided with an invalid or non-matching date.
+	 */
 	@Test
 	public void deleteHabitsHistoryDateTest_Incorrect() {
+		final int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
 
+		Assertions.assertDoesNotThrow(
+			() -> this.historyDAO.deleteHabitsHistory(INVALID_DATE)
+		);
+
+		final int finalHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		// Deletions with invalid dates should not delete any entries
+		Assertions.assertEquals(initialHistoryNum, finalHistoryNum);
 	}
 
+	/**
+	 * Verifies that clearHabitHistoryDatabase() successfully removes all
+	 * entries from the habit history table and leaves the table empty after execution.
+	 */
 	@Test
 	public void clearHabitHistoryDatabaseTest() {
+		Assertions.assertDoesNotThrow(
+			() -> this.historyDAO.clearHabitHistoryDatabase()
+		);
 
+		Assertions.assertEquals(0, this.getTableLength(HABITS_HISTORY));
 	}
 	
 	//

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import com.google.gson.*;
 
 import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.impl.*;
 import static org.jooq.impl.DSL.*;
 
@@ -47,5 +48,27 @@ public abstract class SQLDatabaseDAO {
 		} catch (SQLException ex) {
 			throw new DataAccessException(ex.getMessage(), ex);
 		}
+	}
+
+	/**
+	 * Used to confirm that an entry exists in a more efficient manner.
+	 *
+	 * @param table The table to check
+	 * @param column The column to check by
+	 * @param columnValue The column value by which we are checking
+	 *
+	 * @return true if exists, false otherwise
+	 */
+	protected <R extends Record, T> boolean entryExists(
+			Table<R> table,
+			TableField<R, T> column,
+			T columnValue) throws DataAccessException
+	{
+		return this.executeStatement(
+			ctx -> ctx.fetchExists(
+				DSL.selectFrom(table)
+					.where(column.eq(columnValue))
+			)
+		);
 	}
 }

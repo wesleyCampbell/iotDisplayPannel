@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*;
 import org.flywaydb.core.Flyway;
 
 import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
 
@@ -12,6 +13,7 @@ import java.sql.*;
 import java.sql.Statement;
 
 import java.util.function.Consumer;
+import java.util.List;
 
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -169,4 +171,76 @@ public abstract class DAOTests {
 		
 		flyway.migrate();
 	}
+
+	/**
+	 * Checks to see if a certain entry exists in a given table.
+	 *
+	 * @param table The table to check
+	 * @param column The column to check by
+	 * @param columnValue The the column value to check by
+	 *
+	 * @return true if the entry exists, false otherwise
+	 */
+	protected <R extends Record, T> boolean entryExists(
+			Table<R> table,
+			TableField<R, T> column,
+			T columnValue) 
+	{
+		try (Connection conn = dbManager.getConn()) {
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+			return ctx.fetchExists(
+				DSL.selectOne()
+					.from(table)
+					.where(column.eq(columnValue))
+			);
+		} catch (DataAccessException|SQLException ex) {
+			throw new RuntimeException(ex.getMessage(), ex);
+		}
+	}
+
+	/**
+	 * Returns how many entries are in in a table.
+	 *
+	 * @param table The table to check
+	 *
+	 * @return the number of entries
+	 */
+	protected <R extends Record> int getTableLength(Table<R> table) {
+		try (Connection conn = dbManager.getConn()) {
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+			return ctx.fetchCount(
+				table
+			);
+		} catch (DataAccessException|SQLException ex) {
+			throw new RuntimeException(ex.getMessage(), ex);
+		}
+	}
+
+	/** 
+	 * Returns how many entries match a given constraint in a table
+	 *
+	 * @param table The table to check
+	 * @param column The column to check by
+	 * @param columnValue The column value to check by
+	 *
+	 * @return the number of entries
+	 */
+	protected <R extends Record, T> int getEntryNum(
+			Table<R> table,
+			TableField<R, T> column,
+			T columnValue)
+	{
+		try (Connection conn = dbManager.getConn()) {
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+			return ctx.fetchCount(
+				table
+				.where(column.eq(columnValue))
+			);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex.getMessage(), ex);
+		}
+	}	
 }
