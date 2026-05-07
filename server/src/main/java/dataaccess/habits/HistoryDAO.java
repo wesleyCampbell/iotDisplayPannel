@@ -3,15 +3,24 @@ package dataaccess.habits;
 import java.util.List;
 import java.time.LocalDate;
 
+import org.jooq.impl.DSL;
 import org.jooq.types.ULong;
 
 import dataaccess.SQLDatabaseDAO;
 import dataaccess.DatabaseManager;
 import dataaccess.exception.*;
 
-import model.jooq.habits.tables.HabitsHistory;
+import model.jooq.habits.tables.pojos.HabitsHistory;
+import static model.jooq.habits.Tables.*;
 
 public class HistoryDAO extends SQLDatabaseDAO {
+	//
+	// ========================= GLOBALS ======================
+	//
+	
+	private static final String OBJ_NOT_FOUND_TEMPLATE = "Object with History_ID=%d not found in the database";
+	private static final String HABIT_ID_NOT_FOUND_TEMPLATE = "Habit ID %d is not found in the database.";
+
 	//
 	// ========================= CONSTRUCTORS =======================
 	//
@@ -33,30 +42,112 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @return HabitsHistory object
 	 */
 	public HabitsHistory getHistoryEntry(int historyId) throws DataAccessException {
-		return null;
+		ULong id = ULong.valueOf(historyId);
+
+		// make the query
+		HabitsHistory history = this.executeStatement(
+				ctx -> ctx.select()
+				.from(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HISTORY_ID.eq(id))
+				.fetchOneInto(HabitsHistory.class)
+		);
+
+		// Make sure it isn't null
+		if (history == null) {
+			throw new ObjectNotFoundException(String.format(
+					OBJ_NOT_FOUND_TEMPLATE, historyId));
+		}
+
+		return history;
 	}
 
-	/**
-	 * Fetches all of the history entries that pertain to a specific historyID
-	 * Throws `ObjectNotFoundException` if the habit_id matches no entry
+	/** Fetches all of the history entries that pertain to a specific historyID Throws `ObjectNotFoundException` if the habit_id matches no entry
 	 *
 	 * @param habitID The id of the habit to get the history of
 	 *
 	 * @param A List of habit history entries
 	 */
 	public List<HabitsHistory> getHabitsHistory(int habitID) throws DataAccessException {
-		return null;
+		ULong id = ULong.valueOf(habitID);
+
+		List<HabitsHistory> histories = this.executeStatement(
+			ctx -> ctx.select()
+				.from(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HABIT_ID.eq(id))
+				.fetchInto(HabitsHistory.class)
+		);
+
+		if (histories.isEmpty()) {
+			throw new ObjectNotFoundException(String.format(
+				HABIT_ID_NOT_FOUND_TEMPLATE, habitID)
+			);
+		}
+
+		return histories;
+	}
+
+	/**
+	 * Helper function that returns all habit history from a given habit
+	 * where the completion state matches the passed boolean.
+	 * Will throw an `ObjectNotFoundException` if passed a habit id 
+	 * that does not exist
+	 *
+	 * @param habitID The id of the habit to get the history of
+	 * @param state The desired completion state
+	 *
+	 * @return A List of habit history entries with the given completion state
+	 */
+	private List<HabitsHistory> getHabitsHistoryCompletionStatus(int habitID, boolean state) throws DataAccessException {
+		ULong id = ULong.valueOf(habitID);
+
+		// Confirm that the habit exists in the database
+		boolean exists = this.executeStatement(
+			ctx -> ctx.fetchExists(
+				DSL.selectFrom(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HABIT_ID.eq(id))
+			)
+		);
+		if (!exists) {
+			throw new ObjectNotFoundException(String.format(
+				HABIT_ID_NOT_FOUND_TEMPLATE, habitID)
+			);
+		}
+
+		// Return the completed history entries
+		return this.executeStatement(
+			ctx -> ctx.select()
+				.from(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HABIT_ID.eq(id)
+					.and(HABITS_HISTORY.COMPLETED.eq(state))
+				)
+				.fetchInto(HabitsHistory.class)
+		);
 	}
 
 	/** 
 	 * Fetches all the completed habit history from a given habit
+	 * Will throw an `ObjectNotFoundException` if passed a habit Id that does 
+	 * not exist.
 	 *
 	 * @param habitID The id of the habit to get the history of
 	 *
-	 * @param A List of habit history entries
+	 * @return A List of habit history entries
 	 */
 	public List<HabitsHistory> getCompletedHistory(int habitID) throws DataAccessException {
-		return null;
+		return this.getHabitsHistoryCompletionStatus(habitID, true);
+	}
+
+	/**
+	 * Fetches all the uncompleted habit history from a given habit
+	 * Will throw an `ObjectNotFoundException` if passed a habit Id that does 
+	 * not exist.
+	 *
+	 * @param habitID The id of the habit to get the history of
+	 *
+	 * @param A List of habit history entries.
+	 */
+	public List<HabitsHistory> getUncompletedHistory(int habitID) throws DataAccessException {
+		return this.getHabitsHistoryCompletionStatus(habitID, false);
 	}
 
 	/**
@@ -67,7 +158,12 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @return A List of habit history entries
 	 */
 	public List<HabitsHistory> getHabitsHistory(LocalDate date) throws DataAccessException {
-		return null;
+		return this.executeStatement(
+			ctx -> ctx.select()
+				.from(HABITS_HISTORY)
+				.where(HABITS_HISTORY.COMPLETION_DATE.eq(date))
+				.fetchInto(HabitsHistory.class)
+		);	
 	}
 
 	//

@@ -46,7 +46,7 @@ public class StatsDAOTests extends HabitsDAOTestParent {
 	 */
 	@Test 
 	public void selectOneHabitStatTest_Correct() {
-		for (int i = 0; i < habitNumTrue; i++) {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
 			HabitsStats stats;
 			int id = i + 1;
 			stats = Assertions.assertDoesNotThrow(
@@ -56,9 +56,9 @@ public class StatsDAOTests extends HabitsDAOTestParent {
 			Assertions.assertEquals(id, stats.getHabitId().intValue());
 		}
 
-		for (int i = 0; i < habitNumFalse; i++) {
+		for (int i = 0; i < HABIT_NUM_FALSE; i++) {
 			HabitsStats stats;
-			int id = habitNumTrue + i + 1;
+			int id = HABIT_NUM_TRUE + i + 1;
 			stats = Assertions.assertDoesNotThrow(
 				() -> this.statsDAO.getHabitStats(id)
 			);
@@ -73,7 +73,7 @@ public class StatsDAOTests extends HabitsDAOTestParent {
 	 */
 	@Test
 	public void selectOneHabitStatTest_Incorrect() {
-		int badId = habitNumTrue + habitNumFalse + 300;
+		int badId = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 300;
 
 		Assertions.assertThrows(ObjectNotFoundException.class,
 				() -> this.statsDAO.getHabitStats(badId)

@@ -50,7 +50,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 	@Test
 	public void selectOneHabitIdTest_Correct() {
 		// Make sure can access all active tests
-		for (int i = 0; i < habitNumTrue; i++) {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
 			HabitsCatalog habit;
 			int id = i + 1;
 			habit = Assertions.assertDoesNotThrow(() -> this.habitsDAO.getHabit(id));		
@@ -59,9 +59,9 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 		}
 
 		// Make sure can access all inactive tests 
-		for (int i = 0; i < habitNumFalse; i++) {
+		for (int i = 0; i < HABIT_NUM_FALSE; i++) {
 			HabitsCatalog habit;
-			int id = habitNumTrue + i + 1;
+			int id = HABIT_NUM_TRUE + i + 1;
 			habit = Assertions.assertDoesNotThrow(() -> this.habitsDAO.getHabit(id));
 
 			final String nameExpected = String.format("habitInactive%d", i);
@@ -74,7 +74,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 	 */
 	@Test
 	public void selectOneHabitIdTest_Incorrect() {
-		int id = habitNumTrue + habitNumFalse + 1;
+		int id = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 1;
 
 		Assertions.assertThrows(ObjectNotFoundException.class, () -> this.habitsDAO.getHabit(id));
 	}
@@ -85,7 +85,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 	@Test
 	public void selectOneHabitNameTest_Correct() {
 		// Make sure can access all active tests
-		for (int i = 0; i < habitNumTrue; i++) {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
 			HabitsCatalog habit;
 			String name = String.format("habitActive%d", i);
 			habit = Assertions.assertDoesNotThrow(() -> this.habitsDAO.getHabit(name));		
@@ -95,12 +95,12 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 		}
 
 		// Make sure can access all inactive tests 
-		for (int i = 0; i < habitNumFalse; i++) {
+		for (int i = 0; i < HABIT_NUM_FALSE; i++) {
 			HabitsCatalog habit;
 			String name = String.format("habitInactive%d", i);
 			habit = Assertions.assertDoesNotThrow(() -> this.habitsDAO.getHabit(name));
 
-			int expectedId = habitNumTrue + i + 1;
+			int expectedId = HABIT_NUM_TRUE + i + 1;
 			Assertions.assertEquals(expectedId, habit.getHabitId().intValue());
 		}
 	}
@@ -130,7 +130,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 		List<HabitsCatalog> habits = Assertions.assertDoesNotThrow(
 				() -> this.habitsDAO.getHabitCatalog());
 
-		int totalNum = habitNumTrue + habitNumFalse;
+		int totalNum = HABIT_NUM_TRUE + HABIT_NUM_FALSE;
 		Assertions.assertEquals(totalNum, habits.size());
 	}
 
@@ -167,16 +167,16 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 			() -> this.habitsDAO.getActiveHabits()
 		);
 
-		Assertions.assertEquals(habitNumTrue, habits.size());
+		Assertions.assertEquals(HABIT_NUM_TRUE, habits.size());
 
 		// Collect all the names
 		List<String> habitNames = new ArrayList<>();
-		for (int i = 0; i < habitNumTrue; i++) {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
 			habitNames.add(habits.get(i).getName());	
 		}
 
 		// Verify that all names are in result
-		for (int i = 0; i < habitNumTrue; i++) {
+		for (int i = 0; i < HABIT_NUM_TRUE; i++) {
 			String name = String.format("habitActive%d", i);
 			Assertions.assertTrue(habitNames.contains(name));
 		}
@@ -188,16 +188,16 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 			() -> this.habitsDAO.getInactiveHabits()
 		);
 
-		Assertions.assertEquals(habitNumFalse, habits.size());
+		Assertions.assertEquals(HABIT_NUM_FALSE, habits.size());
 
 		// Collect all the names
 		List<String> habitNames = new ArrayList<>();
-		for (int i = 0; i < habitNumFalse; i++) {
+		for (int i = 0; i < HABIT_NUM_FALSE; i++) {
 			habitNames.add(habits.get(i).getName());	
 		}
 
 		// Verify that all names are in result
-		for (int i = 0; i < habitNumFalse; i++) {
+		for (int i = 0; i < HABIT_NUM_FALSE; i++) {
 			String name = String.format("habitInactive%d", i);
 			Assertions.assertTrue(habitNames.contains(name));
 		}
@@ -234,7 +234,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 			() -> this.habitsDAO.getHabitCatalog()
 		);
 
-		int invalidId = habitNumFalse + habitNumTrue + 300;
+		int invalidId = HABIT_NUM_FALSE + HABIT_NUM_TRUE + 300;
 		Assertions.assertThrows(ObjectNotFoundException.class,
 				() -> this.habitsDAO.deleteHabit(invalidId)
 		);
@@ -269,7 +269,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 	
 	@Test
 	public void insertHabitTest_Correct() {
-		int newId = habitNumFalse + habitNumTrue + 1;
+		int newId = HABIT_NUM_FALSE + HABIT_NUM_TRUE + 1;
 		String newName = "NewHabit";
 		String desc = "This is a new habit";
 

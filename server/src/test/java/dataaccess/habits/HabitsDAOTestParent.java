@@ -18,8 +18,8 @@ public abstract class HabitsDAOTestParent extends DAOTests {
 	// ======================== GLOBALS ======================
 	//
 	
-	protected static final int habitNumTrue = 3;
-	protected static final int habitNumFalse = 2;
+	protected static final int HABIT_NUM_TRUE = 3;
+	protected static final int HABIT_NUM_FALSE = 2;
 
 	protected static final String DB_NAME = "habits";
 
@@ -69,7 +69,8 @@ public abstract class HabitsDAOTestParent extends DAOTests {
 	 * passed into the parent.
 	 */
 	protected static void initTestTables(DatabaseManager dbManager) {
-		insertHabitsNum(dbManager, habitNumTrue, true);
-		insertHabitsNum(dbManager, habitNumFalse, false);
+		insertHabitsNum(dbManager, HABIT_NUM_TRUE, true);
+		insertHabitsNum(dbManager, HABIT_NUM_FALSE, false);
+
 	}
 }
