@@ -15,8 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import dataaccess.DatabaseManager;
-import dataaccess.exception.DataAccessException;
-import dataaccess.exception.ObjectNotFoundException;
+import dataaccess.exception.*;
 
 public class HistoryDAOTests extends HabitsDAOTestParent {
 	//
@@ -25,8 +24,8 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	
 	private static final int HISTORY_NUM_PER_HABIT_DATE = 2;
 
-	private static final LocalDate DATE1 = LocalDate.now();
-	private static final LocalDate DATE2 = LocalDate.of(2026, 5, 3);
+	private static final LocalDate DATE1 = LocalDate.of(2000, 3, 5);
+	private static final LocalDate DATE2 = LocalDate.of(2021, 5, 3);
 	private static final LocalDate INVALID_DATE = LocalDate.of(2021, 4, 2);
 
 	//
@@ -416,24 +415,101 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	//
 	// ========================== INSERTION TESTS ======================
 	//
+	
+	private void createHistoryEntryTestHelper(int habitID, boolean completed, String notes, LocalDate date) {
+		final int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		int newKey;
+		if (date == null) {
+			newKey = Assertions.assertDoesNotThrow(
+				() -> this.historyDAO.createHistoryEntry(
+					habitID, completed, notes	
+				)
+			);
+		} else {
+			newKey = Assertions.assertDoesNotThrow(
+				() -> this.historyDAO.createHistoryEntry(
+					habitID, date, completed, notes
+				)
+			);
+		}
+
+		final int finalHistoryNum = this.getTableLength(HABITS_HISTORY);
+
+		Assertions.assertEquals(initialHistoryNum + 1, finalHistoryNum);
+	
+		// Assert that the new entry does in fact exist. 
+		boolean exists = this.entryExists(
+				HABITS_HISTORY,
+				HABITS_HISTORY.HISTORY_ID,
+				ULong.valueOf(newKey));
+		Assertions.assertTrue(exists);
+
+		// Assert that all the info is correct
+		HabitsHistory history;
+		try (Connection conn = dbManager.getConn()) {
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+			history = ctx.selectFrom(HABITS_HISTORY)
+				.where(HABITS_HISTORY.HISTORY_ID.eq(ULong.valueOf(newKey)))
+				.fetchOneInto(HabitsHistory.class);
+
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+
+		Assertions.assertEquals(completed, history.getCompleted());
+		Assertions.assertEquals(notes, history.getNotes());
+		Assertions.assertEquals(ULong.valueOf(habitID), history.getHabitId());
+		if (date != null) {
+			Assertions.assertEquals(date, history.getCompletionDate());
+		}
+	}
 
 	@Test
 	public void createHistoryEntryTest_Correct() {
-
+		final String notes = "Lorem ipsum da de doo";
+		
+		for (int i = 1; i < HABIT_NUM_TRUE + 1; i++) {
+			this.createHistoryEntryTestHelper(i, true, notes + Integer.toString(i), null);
+		}
 	}
 
 	@Test
 	public void createHistoryEntryTest_Incorrect() {
+		final int invalidHabitID = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 1;
+		final String notes = "this shouldn't work.";
 
+		Assertions.assertThrows(
+			ForeignConstraintException.class,
+			() -> this.historyDAO.createHistoryEntry(invalidHabitID, true, notes)
+		);
 	}
 
 	@Test 
 	public void createHistoryEntryDateTest_Correct() {
+		final String notes = "These are some notes";
+		
+		for (int i = 1; i < HABIT_NUM_TRUE + 1; i++) {
+			// generate a unique date (ish)
+			LocalDate date = LocalDate.of(2026 + i, i * 5 % 12, i * 7 % 28);
+			LocalDate date2 = LocalDate.of(2026 + i + 1, i * 5 % 12, i * 7 % 28);
 
+			this.createHistoryEntryTestHelper(i, true, notes + Integer.toString(i), date);
+			this.createHistoryEntryTestHelper(i, false, notes + "f" + Integer.toString(i), date2);
+		}
 	}
 
 	@Test 
 	public void createHistoryEntryDateTest_Incorrect() {
+		final int invalidHabitID = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 1;
+		final String notes = "this shouldn't work.";
+		final LocalDate date = LocalDate.now();
+
+		Assertions.assertThrows(
+			ForeignConstraintException.class,
+			() -> this.historyDAO.createHistoryEntry(invalidHabitID, date, true, notes)
+		);
 
 	}
 

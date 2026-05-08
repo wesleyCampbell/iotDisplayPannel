@@ -246,8 +246,23 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param completed Whether or not the habit was completed or not
 	 * @param notes Any notes related to the entry history
 	 */
-	public void createHistoryEntry(int habitID, boolean completed, String notes) throws DataAccessException {
+	public int createHistoryEntry(int habitID, boolean completed, String notes) throws DataAccessException {
+		ULong id = ULong.valueOf(habitID);
 
+		ULong generatedKey = this.executeStatement(
+			ctx -> ctx.insertInto(HABITS_HISTORY)
+				.set(HABITS_HISTORY.HABIT_ID, id)
+				.set(HABITS_HISTORY.COMPLETED, completed)
+				.set(HABITS_HISTORY.NOTES, notes)
+				.returning(HABITS_HISTORY.HISTORY_ID)
+				.fetchOne(HABITS_HISTORY.HISTORY_ID)
+		);
+
+		if (generatedKey == null) {
+			throw new DataAccessException("Insertion failed");
+		}
+
+		return generatedKey.intValue();
 	}
 
 	/**
@@ -260,8 +275,20 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param completed Whether or not the habit was completed or not
 	 * @param notes Any notes related to the entry history
 	 */
-	public void createHistoryEntry(int habitID, LocalDate completionDate, boolean completed, String notes) throws DataAccessException {
+	public int createHistoryEntry(int habitID, LocalDate completionDate, boolean completed, String notes) throws DataAccessException {
+		ULong id = ULong.valueOf(habitID);
 
+		ULong generatedKey = this.executeStatement(
+			ctx -> ctx.insertInto(HABITS_HISTORY)
+				.set(HABITS_HISTORY.HABIT_ID, id)
+				.set(HABITS_HISTORY.COMPLETION_DATE, completionDate)
+				.set(HABITS_HISTORY.COMPLETED, completed)
+				.set(HABITS_HISTORY.NOTES, notes)
+				.returning(HABITS_HISTORY.HISTORY_ID)
+				.fetchOne(HABITS_HISTORY.HISTORY_ID)
+		);
+
+		return generatedKey.intValue();
 	}
 
 	//

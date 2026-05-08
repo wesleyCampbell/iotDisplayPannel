@@ -13,6 +13,7 @@ import com.google.gson.*;
 
 import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.exception.IntegrityConstraintViolationException;
 import org.jooq.impl.*;
 import static org.jooq.impl.DSL.*;
 
@@ -43,7 +44,7 @@ public abstract class SQLDatabaseDAO {
 			// Make the DSL context and apply the statement operators
 			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
 			return block.apply(ctx);
-		} catch (SQLIntegrityConstraintViolationException ex) {
+		} catch (SQLIntegrityConstraintViolationException|IntegrityConstraintViolationException ex) {
 			throw new ForeignConstraintException(ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			throw new DataAccessException(ex.getMessage(), ex);
