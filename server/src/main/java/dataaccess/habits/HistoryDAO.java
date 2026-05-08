@@ -301,8 +301,22 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param historyID The id of the history entry to modify
 	 * @param state Whether to mark the entry as completed or not completed
 	 */
-	public void setHistoryEntryCompleted(int historyID, boolean state) throws DataAccessException {
+	public void setHistoryEntryCompleteState(int historyID, boolean state) throws DataAccessException {
+		ULong id = ULong.valueOf(historyID);
 
+		int rows_modified = this.executeStatement(
+			ctx -> ctx.update(HABITS_HISTORY)
+				.set(HABITS_HISTORY.COMPLETED, state)
+				.where(HABITS_HISTORY.HISTORY_ID.eq(id))
+				.execute()
+		);	
+
+		// if the mutation failed, throw a fit
+		if (rows_modified == 0) {
+			throw new ObjectNotFoundException(String.format(
+				OBJ_NOT_FOUND_TEMPLATE, historyID)
+			);
+		}
 	}
 
 	/**
@@ -312,6 +326,20 @@ public class HistoryDAO extends SQLDatabaseDAO {
 	 * @param newNotes The notes to insert into the entry
 	 */
 	public void setHistoryEntryNotes(int historyID, String newNotes) throws DataAccessException {
+		ULong id = ULong.valueOf(historyID);
 
+		int rows_modified = this.executeStatement(
+			ctx -> ctx.update(HABITS_HISTORY)
+				.set(HABITS_HISTORY.NOTES, newNotes)
+				.where(HABITS_HISTORY.HISTORY_ID.eq(id))
+				.execute()
+		);	
+
+		// If the mutation failed, throw a fit
+		if (rows_modified == 0) {
+			throw new ObjectNotFoundException(String.format(
+				OBJ_NOT_FOUND_TEMPLATE, historyID)
+			);	
+		}
 	}
 }

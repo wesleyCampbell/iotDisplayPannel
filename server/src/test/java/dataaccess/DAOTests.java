@@ -243,4 +243,21 @@ public abstract class DAOTests {
 			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}	
+
+	/**
+	 * Returns every entry in a given table.
+	 *
+	 * @param table The table to get
+	 * 
+	 * @return A List containing every entry in the table
+	 */
+	protected <R extends Record> List<R> getTableEntries(Table<R> table) {
+		try (Connection conn = dbManager.getConn()) {
+			DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+			return ctx.selectFrom(table).fetch();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
 }

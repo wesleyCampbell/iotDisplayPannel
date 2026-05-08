@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*;
 import static model.jooq.habits.Tables.*;
 import model.jooq.habits.tables.pojos.HabitsCatalog;
 import model.jooq.habits.tables.pojos.HabitsHistory;
+import model.jooq.habits.tables.records.HabitsHistoryRecord;
 
 import org.jooq.*;
 import org.jooq.impl.*;
@@ -546,24 +547,109 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	// ========================== MODIFICATION TESTS ======================
 	//
 	
+	/**
+	 * Tests that the historyDAO can correctly modify the completion state of a stored entry 
+	 * within the database.
+	 */
 	@Test
 	public void setHistoryEntryCompletedTest_Correct() {
+		// get every history entry in the database
+		List<HabitsHistoryRecord> histories = this.getTableEntries(HABITS_HISTORY);
 
+		// For each History entry, swap its completion state
+		for (HabitsHistoryRecord hist : histories) {
+			boolean completed = hist.getCompleted();
+			int id = hist.getHistoryId().intValue();
+
+			Assertions.assertDoesNotThrow(
+				() -> this.historyDAO.setHistoryEntryCompleteState(id, !completed)
+			);
+
+			// get the updated entry to confirm mutation
+			HabitsHistory newHist;
+			try (Connection conn = dbManager.getConn()) {
+				DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+				newHist = ctx.selectFrom(HABITS_HISTORY)
+					.where(HABITS_HISTORY.HISTORY_ID.eq(ULong.valueOf(id)))
+					.fetchOneInto(HabitsHistory.class);
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+
+			Assertions.assertEquals(!completed, newHist.getCompleted());
+		}
 	}
 	
+	/**
+	 * Verifies that setHistoryEntryCompleteState throws the correct error upon attempting
+	 * to mutate a non-existent entry.
+	 */
 	@Test
 	public void setHistoryEntryCompletedTest_Incorrect() {
+		int badHistoryId = HABIT_NUM_TRUE * HISTORY_NUM_PER_HABIT_DATE + 1;
 
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.setHistoryEntryCompleteState(badHistoryId, true)
+		);
+
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.setHistoryEntryCompleteState(badHistoryId, false)
+		);
 	}
 
+	/**
+	 * Tests that the HistoryDAO can correctly modify the note entry
+	 * of an already stored entry
+	 */
 	@Test
 	public void setHistoryEntryNotesTest_Correct() {
+		String newNotesTemplate = "New Note ";
+
+		// get every history entry in the database
+		List<HabitsHistoryRecord> histories = this.getTableEntries(HABITS_HISTORY);
+
+		// For each history entry, change its note
+		for (int i = 0; i < histories.size(); i++) {
+			HabitsHistoryRecord hist = histories.get(i);
+			int id = hist.getHistoryId().intValue();
+			String newNote = newNotesTemplate + Integer.toString(i);
+
+			Assertions.assertDoesNotThrow(
+				() ->this.historyDAO.setHistoryEntryNotes(id, newNote)
+			);
+
+			// get the updated entry to confirm mutation
+			HabitsHistory newHist;
+			try (Connection conn = dbManager.getConn()) {
+				DSLContext ctx = DSL.using(conn, SQLDialect.MARIADB);
+
+				newHist = ctx.selectFrom(HABITS_HISTORY)
+					.where(HABITS_HISTORY.HISTORY_ID.eq(ULong.valueOf(id)))
+					.fetchOneInto(HabitsHistory.class);
+
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+
+			Assertions.assertEquals(newNote, newHist.getNotes());
+		}
 	}
 
-
+	/**
+	 * Confirms that setHistoryEntryNotes throws the correct error
+	 * when attempting to modify a non-existent entry
+	 */
 	@Test
 	public void setHistoryEntryNotesTest_Incorrect() {
+		int badHistoryId = HABIT_NUM_TRUE * HISTORY_NUM_PER_HABIT_DATE + 1;
 
+		Assertions.assertThrows(
+			ObjectNotFoundException.class,
+			() -> this.historyDAO.setHistoryEntryNotes(badHistoryId, "bad bad bad")
+		);
 	}
 }
 
