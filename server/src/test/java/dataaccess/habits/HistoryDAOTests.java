@@ -416,6 +416,19 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	// ========================== INSERTION TESTS ======================
 	//
 	
+	/**
+	 * Helper function for insertion tests. Will call HistoryDAO.createHistoryEntry()
+	 * using the given paramaters. If no date is passed in, the createHistoryEntry()
+	 * with no date in the function signature will be called.
+	 *
+	 * Will insert, confirm creation in database, and will confirm data correctness in
+	 * the database.
+	 *
+	 * @param habitID The id of the habit to assign to the history entry. Must be valid.
+	 * @param completed Whether or not the habbit should be marked as completed.
+	 * @param notes Any notes to attach to the history entry
+	 * @param date The date to assign to the history entry, if not null
+	 */
 	private void createHistoryEntryTestHelper(int habitID, boolean completed, String notes, LocalDate date) {
 		final int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
 
@@ -466,6 +479,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		}
 	}
 
+	/**
+	 * Tests correct data insertion via createHistoryEntry.
+	 * Will confirm insertion and validity of data after insertion
+	 */
 	@Test
 	public void createHistoryEntryTest_Correct() {
 		final String notes = "Lorem ipsum da de doo";
@@ -475,6 +492,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		}
 	}
 
+	/**
+	 * Confirms that createHistoryEntry throws the correct error on bad
+	 * insertion call
+	 */
 	@Test
 	public void createHistoryEntryTest_Incorrect() {
 		final int invalidHabitID = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 1;
@@ -486,6 +507,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		);
 	}
 
+	/**
+	 * Tests correct data insertion via createHistoryEntry with passed date.
+	 * Will confirm insertion and validity of data after insertion.
+	 */
 	@Test 
 	public void createHistoryEntryDateTest_Correct() {
 		final String notes = "These are some notes";
@@ -500,6 +525,10 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 		}
 	}
 
+	/**
+	 * Confirms that createHistoryEntry() will throw the correct error on bad
+	 * habitId pass
+	 */
 	@Test 
 	public void createHistoryEntryDateTest_Incorrect() {
 		final int invalidHabitID = HABIT_NUM_TRUE + HABIT_NUM_FALSE + 1;
@@ -529,8 +558,8 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 
 	@Test
 	public void setHistoryEntryNotesTest_Correct() {
-
 	}
+
 
 	@Test
 	public void setHistoryEntryNotesTest_Incorrect() {
