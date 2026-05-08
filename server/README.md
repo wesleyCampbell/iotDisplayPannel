@@ -3,7 +3,7 @@
 ---
 
 Author: Wesley Campbell
-Version: 1.0.4
+Version: 1.0.5
 Date: 2026-04-10
 
 ---
@@ -92,6 +92,11 @@ The endpoints for each service are:
 | api/habit/stats | GET     | Get the habit stats              | JSON serialization of relevant stats  |
 
 ### Change Log
+
+##### Version 1.0.5, (2026-05-08):
+  - Implemented Data Access Objects as bridge between MariaDB database and Java program
+  - Java program now has structured CRUD access to database entries for Habit tracking.
+  - Developed infrastructure for future feature development
 
 ##### Version 1.0.4, (2026-04-24):
   - Added in Data access testing infrastructure
