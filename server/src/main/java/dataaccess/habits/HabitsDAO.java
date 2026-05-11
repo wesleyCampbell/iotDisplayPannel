@@ -1,37 +1,16 @@
 package dataaccess.habits;
 
-import dataaccess.SQLDatabaseDAO;
 import dataaccess.exception.*;
-import dataaccess.DatabaseManager;
 
-import org.jooq.types.*;
-
-import static model.jooq.habits.Tables.*;
-import model.jooq.habits.tables.pojos.HabitsCatalog;
+import model.jooq.habits.tables.pojos.*;
 
 import java.util.List;
 
-public class HabitsDAO extends SQLDatabaseDAO {
+public interface HabitsDAO {
 	//
-	// ======================== GLOBALS =============================
-	//
-		
-	private static final String OBJ_NOT_FOUND_ERROR_TEMPLATE = "Object with Habit_ID %d not found in the database";
-
-	private static final String OBJ_NOT_FOUND_NAME_ERROR_TEMPLATE = "Object with name %s not found in the database";
-
-	//
-	// ======================== CONSTRUCTORS =========================
+	// ====================== SELECTION METHODS ======================
 	//
 	
-	public HabitsDAO(DatabaseManager dbManager) throws DataAccessException {
-		super(dbManager);
-	}
-
-	//
-	// ======================== DATA SELECT METHODS ==========================
-	//
-
 	/**
 	 * Given a habitID, this method will try and fetch the associated habit_catalog object from the database. If not found, will throw a `ObjectNotFoundException`.
 	 *
@@ -39,25 +18,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return The Habit_Catalog object
 	 */
-	public HabitsCatalog getHabit(long habitID) throws DataAccessException {
-		ULong id = ULong.valueOf(habitID);
-
-		// Open the db connection
-		HabitsCatalog habit = this.executeStatement(
-			ctx ->
-				ctx.select()
-				.from(HABITS_CATALOG)
-				.where(HABITS_CATALOG.HABIT_ID.eq(id))
-				.fetchOneInto(HabitsCatalog.class)
-		);
-
-		// If it doesn't exist, throw an exception to notify caller.
-		if (habit == null) {
-			throw new ObjectNotFoundException(String.format(OBJ_NOT_FOUND_ERROR_TEMPLATE, habitID));
-		}
-		
-		return habit;
-	}
+	public HabitsCatalog getHabit(long habitID) throws DataAccessException;
 
 	/** 
 	 * Given a habit's name, this method will try to fetch the associated habit_catalog
@@ -67,64 +28,28 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return The HabitCatalog object
 	 */
-	public HabitsCatalog getHabit(String name) throws DataAccessException {
-		HabitsCatalog habit = this.executeStatement(
-			ctx ->
-				ctx.select()
-				.from(HABITS_CATALOG)
-				.where(HABITS_CATALOG.NAME.eq(name))
-				.fetchOneInto(HabitsCatalog.class)
-		);
-
-		if (habit == null) {
-			throw new ObjectNotFoundException(
-					String.format(OBJ_NOT_FOUND_NAME_ERROR_TEMPLATE, name)
-			);
-		}
-
-		return habit;
-	}
+	public HabitsCatalog getHabit(String name) throws DataAccessException;
 
 	/**
 	 * Returns all active habits
 	 *
 	 * @return A list containing all active habit entries from the database
 	 */
-	public List<HabitsCatalog> getActiveHabits() throws DataAccessException {
-		return this.executeStatement(
-			ctx -> ctx.select()
-					.from(HABITS_CATALOG)
-					.where(HABITS_CATALOG.ACTIVE.eq(true))
-					.fetchInto(HabitsCatalog.class)
-		);
-	}
+	public List<HabitsCatalog> getActiveHabits() throws DataAccessException;
 
 	/**
 	 * Returns all inactive habits
 	 *
 	 * @return A list containing all inactive habit entries from the database
 	 */
-	public List<HabitsCatalog> getInactiveHabits() throws DataAccessException {
-		return this.executeStatement(
-			ctx -> ctx.select()
-					.from(HABITS_CATALOG)
-					.where(HABITS_CATALOG.ACTIVE.eq(false))
-					.fetchInto(HabitsCatalog.class)
-		);
-	}
+	public List<HabitsCatalog> getInactiveHabits() throws DataAccessException;
 
 	/**
 	 * Returns the entire habit catalog from the database
 	 *
 	 * @return A list containing all habit entries in the database
 	 */
-	public List<HabitsCatalog> getHabitCatalog() throws DataAccessException {
-		return this.executeStatement(
-			ctx -> ctx.select()
-					.from(HABITS_CATALOG)
-					.fetchInto(HabitsCatalog.class)
-		);
-	}
+	public List<HabitsCatalog> getHabitCatalog() throws DataAccessException;
 
 	/**
 	 * Returns the entire habit catalog from the database
@@ -134,53 +59,26 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 * 
 	 * @return A List containing all habit entries in the database.
 	 */
-	public List<HabitsCatalog> getHabitCatalog(int limit, int offset) throws DataAccessException {
-		List<HabitsCatalog> catalog = this.executeStatement(
-			ctx -> 
-				ctx.select()
-				.from(HABITS_CATALOG)
-				.orderBy(HABITS_CATALOG.HABIT_ID.asc())
-				.limit(limit)
-				.offset(offset)
-				.fetchInto(HabitsCatalog.class)
-		);
+	public List<HabitsCatalog> getHabitCatalog(int limit, int offset) throws DataAccessException;
 
-		return catalog;
-	}	
+	//
+	// ============================= DELETION METHODS ======================
+	//
 	
-	//
-	// ======================== DATA DELETE METHODS ==========================
-	//
-
 	/**
 	 * Deletes the habit entry that matches the provided habit id from the database.
 	 *
 	 * @param habitID The habit id of the habit entry to delete
 	 */
-	public void deleteHabit(long habitID) throws DataAccessException {
-		ULong id = ULong.valueOf(habitID);
-
-		int rows_deleted = this.executeStatement(
-								ctx -> ctx.deleteFrom(HABITS_CATALOG)
-										.where(HABITS_CATALOG.HABIT_ID.eq(id))
-										.execute()
-		);
-		if (rows_deleted == 0) {
-			throw new ObjectNotFoundException(String.format(OBJ_NOT_FOUND_ERROR_TEMPLATE, habitID));
-		}
-	}
+	public void deleteHabit(long habitID) throws DataAccessException;
 
 	/**
 	 * Clears the entire habit catalog database
 	 */
-	public void clearHabitDatabase() throws DataAccessException {
-		this.executeStatement(
-			ctx -> ctx.deleteFrom(HABITS_CATALOG).execute()	
-		);
-	}
-	
+	public void clearHabitDatabase() throws DataAccessException;
+
 	//
-	// ======================== DATA INSERT METHODS ==========================
+	// ============================ INSERTION METHODS ==========================
 	//
 	
 	/**
@@ -190,17 +88,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 * @param description A description of the new habit
 	 * @param active Whether or not the new habit should be considered active
 	 */
-	public void insertHabit(String name, String description, boolean active) throws DataAccessException {
-		int rows_affected = this.executeStatement(
-			ctx -> ctx.insertInto(HABITS_CATALOG, HABITS_CATALOG.NAME, HABITS_CATALOG.DESCRIPTION, HABITS_CATALOG.ACTIVE)
-			.values(name, description, active)
-			.execute()
-		);
-
-		if (rows_affected == 0) {
-			throw new DataAccessException("Insertion failed");
-		}
-	}
+	public void insertHabit(String name, String description, boolean active) throws DataAccessException;
 
 	/**
 	 * Inserts a habit into the database.
@@ -208,7 +96,6 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 * @param name The name of the new habit entry
 	 * @param description A description of the new habit
 	 */
-	public void insertHabit(String name, String description) throws DataAccessException {
-		this.insertHabit(name, description, true);
-	}
+	public void insertHabit(String name, String description) throws DataAccessException;
 }
+

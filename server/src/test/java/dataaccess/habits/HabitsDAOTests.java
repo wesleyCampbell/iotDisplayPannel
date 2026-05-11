@@ -34,7 +34,7 @@ public class HabitsDAOTests extends HabitsDAOTestParent {
 			if (this.dbManager == null) {
 				throw new DataAccessException("parent dbManager is null.");
 			}
-			this.habitsDAO = new HabitsDAO(this.dbManager);
+			this.habitsDAO = new sqlHabitsDAO(this.dbManager);
 		} catch (DataAccessException ex) {
 			throw new RuntimeException(ex.getMessage(), ex);
 		}

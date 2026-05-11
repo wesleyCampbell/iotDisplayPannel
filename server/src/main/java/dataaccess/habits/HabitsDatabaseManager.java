@@ -13,9 +13,9 @@ public class HabitsDatabaseManager extends DatabaseManager {
 	public HabitsDatabaseManager() throws DataAccessException {
 		super(DB_NAME);
 
-		this.habitsDAO = new HabitsDAO(this);
-		this.historyDAO = new HistoryDAO(this);
-		this.statsDAO = new StatsDAO(this);
+		this.habitsDAO = new sqlHabitsDAO(this);
+		this.historyDAO = new sqlHistoryDAO(this);
+		this.statsDAO = new sqlStatsDAO(this);
 	}
 
 	public HabitsDAO getHabitsDAO() {

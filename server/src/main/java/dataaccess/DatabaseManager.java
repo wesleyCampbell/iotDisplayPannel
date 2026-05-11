@@ -5,16 +5,6 @@ import dataaccess.exception.*;
 import java.sql.*;
 
 import java.util.Properties;
-import java.util.List;
-import java.util.ArrayList;
-
-import org.jooq.*;
-import org.jooq.Record;
-import org.jooq.types.*;
-import org.jooq.impl.DSL;
-import static org.jooq.impl.DSL.*;
-
-import static model.jooq.habits.Tables.*;
 
 public class DatabaseManager {
 	//

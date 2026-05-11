@@ -87,7 +87,7 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 			if (this.dbManager == null) {
 				throw new DataAccessException("Parent dbManager is null.");
 			}
-			this.historyDAO = new HistoryDAO(this.dbManager);
+			this.historyDAO = new sqlHistoryDAO(this.dbManager);
 		} catch (DataAccessException ex) {
 			throw new RuntimeException(ex.getMessage(), ex);
 		}	
@@ -433,7 +433,7 @@ public class HistoryDAOTests extends HabitsDAOTestParent {
 	private void createHistoryEntryTestHelper(int habitID, boolean completed, String notes, LocalDate date) {
 		final int initialHistoryNum = this.getTableLength(HABITS_HISTORY);
 
-		int newKey;
+		long newKey;
 		if (date == null) {
 			newKey = Assertions.assertDoesNotThrow(
 				() -> this.historyDAO.createHistoryEntry(
