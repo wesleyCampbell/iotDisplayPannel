@@ -3,7 +3,7 @@ syntax = "proto3";
 package com.projectganymede.iot;
 
 option java_multiple_files = true;
-option java_package = "com.projectganymede.iot.api.habit";
+option java_package = "api.habits";
 option java_outer_classname = "HabitCatalogAPI";
 
 // 
@@ -44,5 +44,15 @@ message DeleteHabitEntryRequest {
 }
 
 message DeleteHabitEntryResponse {
-	uint64 habit_id = 1;
+}
+
+// Create a habit entry
+message CreateHabitEntryRequest {
+	string name = 1;
+	string description = 2;
+	bool active = 3;
+}
+
+message CreateHabitEntryResponse {
+	
 }

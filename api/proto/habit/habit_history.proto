@@ -5,7 +5,7 @@ package com.projectganymede.iot;
 import "lib/google/type/date.proto";
 
 option java_multiple_files = true;
-option java_package = "com.projectganymede.iot.api.habit";
+option java_package = "api.habits";
 option java_outer_classname = "HabitHistoryAPI";
 
 //

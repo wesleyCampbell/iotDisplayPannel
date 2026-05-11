@@ -98,6 +98,7 @@
 							<sources>
 								<source>${project.build.directory}/generated-sources/</source>
 								<source>${project.build.directory}/generated-sources/jooq/java</source>
+								<source>${project.build.directory}/generated-sources/protobuf/java</source>
 							</sources>
 						</configuration>
 					</execution>
@@ -136,6 +137,7 @@
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>compile</goal>
+							<goal>test-compile</goal>
 						</goals>
 					</execution>
 				</executions>
