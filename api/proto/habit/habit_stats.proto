@@ -18,17 +18,13 @@ enum GOAL_TYPE {
 	GOAL_TYPE_YEARLY = 4;
 }
 
-message HabitStatVerbose {
+
+message HabitStreak {
 	uint64 habit_id = 1;
-
 	uint32 current_day_streak = 2;
-	uint32 longest_day_steak = 3;
-	
-	GOAL_TYPE goal_type = 4;
-	uint32 goal_target = 5;
-
-	uint32 longest_goal_streak = 6;
-	uint32 current_goal_streak = 7;
+	uint32 longest_day_streak = 3;
+	uint32 current_goal_streak = 4;
+	uint32 longest_goal_streak = 5; 
 }
 
 message HabitGoal {
@@ -37,11 +33,12 @@ message HabitGoal {
 	uint32 goal_target = 3;
 }
 
-message HabitStreak {
-	uint32 current_day_streak = 1;
-	uint32 longest_day_streak = 2;
-	uint32 current_goal_streak = 3;
-	uint32 longest_goal_streak = 4; 
+message HabitStatVerbose {
+	uint64 habit_id = 1;
+
+	HabitGoal goal = 2;
+
+	HabitStreak streak = 3;
 }
 
 // 
