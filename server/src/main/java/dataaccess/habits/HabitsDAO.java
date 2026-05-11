@@ -39,7 +39,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return The Habit_Catalog object
 	 */
-	public HabitsCatalog getHabit(int habitID) throws DataAccessException {
+	public HabitsCatalog getHabit(long habitID) throws DataAccessException {
 		ULong id = ULong.valueOf(habitID);
 
 		// Open the db connection
@@ -157,7 +157,7 @@ public class HabitsDAO extends SQLDatabaseDAO {
 	 *
 	 * @param habitID The habit id of the habit entry to delete
 	 */
-	public void deleteHabit(int habitID) throws DataAccessException {
+	public void deleteHabit(long habitID) throws DataAccessException {
 		ULong id = ULong.valueOf(habitID);
 
 		int rows_deleted = this.executeStatement(

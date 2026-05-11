@@ -35,7 +35,7 @@ public class StatsDAO extends SQLDatabaseDAO {
 	 *
 	 * @return HabitsStats object
 	 */
-	public HabitsStats getHabitStats(int habitID) throws DataAccessException {
+	public HabitsStats getHabitStats(long habitID) throws DataAccessException {
 		ULong id = ULong.valueOf(habitID);
 
 		HabitsStats stats = this.executeStatement(
