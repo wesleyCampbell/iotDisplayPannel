@@ -37,16 +37,16 @@ public class GetHabitHistoryService {
 	 * @return the length of the daily streak. 
 	 */
 	private int calculateDayStreak(LocalDate lastFail, LocalDate lastComplete) {
+		// If the lastFail or lastComplete objects are null, 
+		// there is not enough history to calculate the streak.
+		if (lastFail == null || lastComplete == null) {
+			return 0;
+		}
+
 		LocalDate today = LocalDate.now();
 		// If the last completion was not yesterday or today, there is no current streak
 		if (ChronoUnit.DAYS.between(lastComplete, today) > 1) {
 			return 0;
-		}
-
-		// If the lastFail or lastComplete objects are null, 
-		// there is not enough history to calculate the streak.
-		if (lastFail == null || lastComplete == null) {
-			return -1;
 		}
 
 		// casting down from long->int probably won't result in a bug. 
