@@ -4,260 +4,344 @@ import dataaccess.habits.*;
 import dataaccess.exception.*;
 
 import api.habits.*;
-import model.jooq.habits.enums.HabitsStatsGoalType;
 import model.jooq.habits.tables.pojos.*;
 
 import org.jooq.types.ULong;
 import org.junit.jupiter.api.*;
 
+import com.google.type.Date;
+
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class GetHabitHistoryServiceTests {
 	//
-	// ======================== GLOBALS =======================
+	// ===================== GLOBALS ==================
 	//
 	
-	private static final int HABIT_NUM_FULL = 3;
-	private static final int HABIT_NUM_NULL = 3;
-
-	private static final LocalDate[] HABIT_NULL_FAILS = {
-		null,
-		LocalDate.now().minusDays(4),
-		null
-	};
-
-	private static final LocalDate[] HABIT_NULL_COMPS = {
-		LocalDate.now(),
-		null,
-		null
-	};
-
-	private static final HabitsStatsGoalType[] GOAL_TYPES = {
-		HabitsStatsGoalType.Weekly,
-		HabitsStatsGoalType.Yearly,
-		HabitsStatsGoalType.Daily
-	};
+	private static final int HABIT_NUM = 2;
+	private static final int HISTORY_NUM = 3;
+	private static final LocalDate TODAY = LocalDate.now();
 	
 	//
-	// ======================== TEST INITIALIZATION ============	
+	// ===================== TEST INITIALIZATION ===================
 	//
-	
-	private static StatsDAO statsDAO;
+
+	private static HistoryDAO historyDAO;
 	private static GetHabitHistoryService service;
-	private static List<HabitsStats> stats = new ArrayList<>();
-	private static List<Integer> currentStreaks = new ArrayList<>();
+	private static List<HabitsHistory> histories = new ArrayList<>();
 
 	/**
 	 * Initializes the DAO and service objects.
-	 * Additionally, prepares all of the mockito test logic
+	 * Additionally, mocks the DAO class such that it won't use a database 
+	 * but will perform its logic using memory-based storage.
+	 * Basic implementation of all HistoryDAO methods
 	 */
 	@BeforeAll
 	public static void initTests() throws DataAccessException {
-		statsDAO = mock(StatsDAO.class);
-		service = new GetHabitHistoryService(statsDAO);
-		LocalDate today = LocalDate.now();
+		historyDAO = mock(HistoryDAO.class);
+		service = new GetHabitHistoryService(historyDAO);
 
-		// Prepares mock StatsDAO to return the correct
-		// mock data when requested
-		for (int i = 0; i < HABIT_NUM_FULL; i++) {
-			int dayOffset = (i + 1) * 2;
-			// make the last completed date today or yesterday
-			int dayModifier = i % 2 == 0 ? 1 : 0;
-			LocalDate completionDate = today.minusDays(dayModifier);
+		// Prepares mock HistoryDAO to return mock data
+		// when requested
+		for (int i = 0; i < HABIT_NUM; i++) {
+			long habitId = i + 1;
+			for (int j = 0; j < HISTORY_NUM; j++) {
+				long historyId = j + i * HISTORY_NUM + 1;
 
-			HabitsStats stat = new HabitsStats(
-				ULong.valueOf(i + 1), 			  // habit id
-				today.minusDays(dayOffset),  	  // Last failed date
-				completionDate,  	  			  // Last completed date
-				i * 3 + 10,     	  			  // Longest day streak (arbitrary)
-				GOAL_TYPES[i],  	  			  // Goal type
-				i * 4 + 11,   		  			  // Goal target (arbitrary)
-				i * 3 + 8,      	  			  // Longest goal streak (arbitrary)
-				i * 3 + 3,			  			  // Current goal streak (arbitrary)
-				LocalDateTime.now()   			  // Modification timestamp (arbitrary)
+				HabitsHistory hist = new HabitsHistory(
+					ULong.valueOf(historyId),    // history_id
+					ULong.valueOf(habitId),        // habit_id
+					TODAY.minusDays(j + 1),      // completionDate
+					i % 2 == 0,                  // completed
+					"These are some notes"       // notes
+				);
+
+				histories.add(hist);
+
+				// Fetch the correct entry by its historyID
+				when(historyDAO.getHistoryEntry(historyId)).thenReturn(
+					histories.get((int)historyId - 1)
+				);
+			}
+
+			// Fetch the correct entries by its habitID
+			when(historyDAO.getHabitsHistory(habitId)).thenReturn(
+				new ArrayList<HabitsHistory>(
+					histories.subList(i * HISTORY_NUM, (i + 1) * HISTORY_NUM)
+				)
 			);
-
-			stats.add(stat);
-			currentStreaks.add(dayOffset - dayModifier);  // -1 because it does not count fail date
-
-			when(statsDAO.getHabitStats(i + 1)).thenReturn(stats.get(i));
 		}
 
-		for (int i = 0; i < HABIT_NUM_NULL; i++) {
-			int id = HABIT_NUM_FULL + i + 1;
-			LocalDate failDate = HABIT_NULL_FAILS[i];
-			LocalDate compDate = HABIT_NULL_COMPS[i];
+		// Fetch the correct entries by its date
+		for (int j = 0; j < HISTORY_NUM; j++) {
+			LocalDate date = TODAY.minusDays(j + 1);
+			
+			// Create a copy of the histories and filter out all incorrect dates
+			List<HabitsHistory> dateHists = histories.stream()
+				.filter(history -> history.getCompletionDate().equals(date))
+				.toList();
 
-			stats.add(new HabitsStats(
-				ULong.valueOf(id),
-				failDate,
-				compDate,
-				34,
-				GOAL_TYPES[0],
-				32,
-				42,
-				31,
-				LocalDateTime.now()
-			));
-			currentStreaks.add(0);
-
-			when(statsDAO.getHabitStats(id)).thenReturn(stats.get(id - 1));
+			// Return them when querried
+			when(historyDAO.getHabitsHistory(date)).thenReturn(
+				dateHists	
+			);
 		}
+
+		// Fetch the correct entries by date range
+		when(historyDAO.getHabitsHistoryByDateRange(any(LocalDate.class), any(LocalDate.class)))
+			.thenAnswer(invocation -> {
+				LocalDate start = invocation.getArgument(0);
+				LocalDate end = invocation.getArgument(1);
+
+				return getHistoriesRange(start, end);
+			});
 	}
 	
 	//
-	// ====================== UNIT TESTS =====================
+	// ===================== HELPER METHODS ===================
 	//
 	
 	/**
-	 * Helper function that determines the equality between an API 
-	 * response for goal data and a full DAO object.
-	 * If not equal, will throw an assertion error for junit.
+	 * Tranforms a Date (com.google) to a LocalDate (java.time)
 	 *
-	 * @param habitDAO The full DAO representation of the data
-	 * @param goalData The stats data from the API
+	 * @param date The date to transform
+	 *
+	 * @return the LocalDate
 	 */
-	private void isEqualGoal(HabitsStats habitDAO, HabitGoal goalData) {
-		Assertions.assertEquals(
-			habitDAO.getGoalTarget(),
-			goalData.getGoalTarget()
+	private static LocalDate convertDate(Date date) {
+		return LocalDate.of(
+			date.getYear(),
+			date.getMonth(),
+			date.getDay()
 		);
-
-		// Assert goal type equality
-		GOAL_TYPE goalType = goalData.getGoalType();
-		GOAL_TYPE expectedGoalType;
-		switch (habitDAO.getGoalType()) {
-			case Yearly:
-				expectedGoalType = GOAL_TYPE.GOAL_TYPE_YEARLY;
-				break;
-			case Monthly:
-				expectedGoalType = GOAL_TYPE.GOAL_TYPE_MONTHLY;
-				break;
-			case Weekly:
-				expectedGoalType = GOAL_TYPE.GOAL_TYPE_WEEKLY;
-				break;
-			case Daily:
-				expectedGoalType = GOAL_TYPE.GOAL_TYPE_DAILY;
-				break;
-			default:
-				expectedGoalType = GOAL_TYPE.GOAL_TYPE_UNSPECIFIED;
-		}
-		Assertions.assertEquals(expectedGoalType, goalType);
 	}
 
 	/**
-	 * Helper function that determines the equality between an API
-	 * response for Streak data and a full DAO object.
-	 * If not equal, will throw an assertion error for junit.
+	 * Transforms a LocalDate (java.time) into a Date (com.google)
 	 *
-	 * @param habitDAO The full DAO representation of the data
-	 * @param streakData the streakd ata from the API
+	 * @param date The date to transform
+	 *
+	 * @return The Date object
 	 */
-	private void isEqualStreak(HabitsStats habitDAO, HabitStreak streakData) {
-		// Assert streak data equality
-		Assertions.assertEquals(
-				habitDAO.getCurrentGoalStreak(),
-				streakData.getCurrentGoalStreak()
-		);	
-		Assertions.assertEquals(
-				habitDAO.getLongestGoalStreak(),
-				streakData.getLongestGoalStreak()
-		);
-		Assertions.assertEquals(
-			habitDAO.getLongestDayStreak(),
-			streakData.getLongestDayStreak()
-		);
+	private static Date convertDate(LocalDate date) {
+		return Date.newBuilder()
+			.setYear(date.getYear())
+			.setMonth(date.getMonthValue())
+			.setDay(date.getDayOfMonth())
+			.build();
+	}
+
+	/**
+	 * Fetches the history entires that lie within a given date range
+	 *
+	 * @param startDate The start date of the range
+	 * @param endDate the end date of the range
+	 *
+	 * @return A list of the valid entries.
+	 */
+	private static List<HabitsHistory> getHistoriesRange(LocalDate startDate, LocalDate endDate) {
+		return histories.stream()
+			.filter(history -> 
+					!history.getCompletionDate().isBefore(startDate) &&
+					!history.getCompletionDate().isAfter(endDate)
+			)
+			.toList();
+	}
+
+	/**
+	 * Fetches the history entries that match the given habitId
+	 *
+	 * @param habitId The habit id of the histories to return
+	 *
+	 * @return A list containing the requested habit entries
+	 */
+	private static List<HabitsHistory> getHistoriesHabitId(long habitId) {
+		ULong id = ULong.valueOf(habitId);
+
+		return histories.stream().filter(
+			history -> history.getHabitId().equals(id)
+		).toList();
 	}
 	
 	/**
-	 * Helper function that determines equality between an API response
-	 * and a DAO object. If not equal, will throw an assertion error.
+	 * Tests the equality between an API and DAO representation of a Habit History entry
 	 *
-	 * @param habitDAO The DAO representation of the data
-	 * @param habitAPI the API representation of the data
+	 * @param histDAO The DAO representation of the history
+	 * @param histAPI The API representation of the history
+	 *
+	 * @return true if equal, false, otherwise
 	 */
-	private void isEqualData(HabitsStats habitDAO, HabitStatVerbose habitAPI) {
-		HabitGoal goalData = habitAPI.getGoal();
-		HabitStreak streakData = habitAPI.getStreak();
+	private static boolean isEqualHistory(HabitsHistory histDAO, HabitHistory histAPI) {
+		// check history id
+		if (histAPI.getHistoryId() != histDAO.getHistoryId().longValue()) {
+			return false;
+		}
 
-		isEqualGoal(habitDAO, goalData);
-		isEqualStreak(habitDAO, streakData);
+		// check habit id
+		if (histDAO.getHabitId().longValue() != histAPI.getHabitId()) {
+			return false;
+		}
 
+		// check completion date
+		LocalDate dateAPI = convertDate(histAPI.getCompletionDate());
+		if (!histDAO.getCompletionDate().equals(dateAPI)) {
+			return false;
+		}
+
+		// check completion status
+		if (histDAO.getCompleted() != histAPI.getCompleted()) {
+			return false;
+		}
+
+		// check notes
+		if (!histDAO.getNotes().equals(histAPI.getNotes())) {
+			return false;
+		}
+
+		return true;
 	}
+
+	/**
+	 * Sorts a List of Habit Entries by its historyId
+	 *
+	 * @param histories The list of history entries
+	 *
+	 * @return A sorted list
+	 */
+	private List<HabitHistory> historiesSortedAPI(List<HabitHistory> histories) {
+		return histories.stream()
+			.sorted(Comparator.comparing(HabitHistory::getHistoryId))
+			.toList();
+	}
+
+	/**
+	 * Sorts a List of Habit Entries by its historyId
+	 *
+	 * @param histories The list of history entries
+	 *
+	 * @return A sorted list
+	 */
+	private List<HabitsHistory> historiesSortedDAO(List<HabitsHistory> histories) {
+		return histories.stream()
+			.sorted(Comparator.comparing(HabitsHistory::getHistoryId))
+			.toList();
+	}
+	
+	//
+	// ===================== UNIT TESTS ===================
+	//
 	
 	/**
 	 * Tests that the service fetches the correct data from the DAO level.
-	 * Verifies that the calculations and logic are correct for streak
-	 * calculation.
+	 * for getHabitHistory()
 	 */
 	@Test
-	public void GetHabitStatsTest() throws DataAccessException {
-		for (int i = 0; i < HABIT_NUM_FULL + HABIT_NUM_NULL; i++) {
-			ULong id = ULong.valueOf(i + 1);
+	public void getHabitHistoryTest() throws DataAccessException {
+		for (int i = 0; i < HABIT_NUM; i++) {
+			for (int j = 0; j < HISTORY_NUM; j++) {
+				long historyId = j + HISTORY_NUM * i + 1;	
 
-			GetHabitStatRequest request = GetHabitStatRequest.newBuilder()
-				.setHabitId(id.longValue()).build();
+				GetHabitHistoryRequest request = GetHabitHistoryRequest.newBuilder()
+					.setHistoryId(historyId).build();
 
-			GetHabitStatResponse response = service.getHabitStats(request);
+				GetHabitHistoryResponse response = service.getHabitHistory(request);
 
-			HabitsStats stat = stats.get(i);
-			HabitStatVerbose statAPI = response.getStats();
+				HabitsHistory historyDAO = histories.get((int)historyId - 1);
+				HabitHistory historyAPI = response.getHistory();
+
+				Assertions.assertTrue(isEqualHistory(historyDAO, historyAPI));
+			}
+		}
+	}
+
+	/**
+	 * Tests that the service fetches the correct data from the DAO level.
+	 * for getHabitHistoryByDate()
+	 */
+	@Test
+	public void getHabitHistoryByDateTest() throws DataAccessException {
+		for (int j = 0; j < HISTORY_NUM; j++) {
+			LocalDate date = TODAY.minusDays(j + 1);	
+
+			ListHabitHistoryByDateRequest request = ListHabitHistoryByDateRequest.newBuilder()
+				.setStartDate(convertDate(date))
+				.setEndDate(convertDate(TODAY))
+				.build();
+
+			ListHabitHistoryByDateResponse response = service.getHabitHistoryByDate(request);
+
+			// make the calls and sort the return values by history id
+			List<HabitHistory> historiesAPI = historiesSortedAPI(response.getHistoryListList());
+			List<HabitsHistory> historiesDAO = historiesSortedDAO(getHistoriesRange(date, TODAY));
+
+			// Make sure that the two methods return the same entries
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
 			
-			isEqualData(stat, statAPI);
+			// Make sure each entry is the same.
+			for (int i = 0; i < historiesDAO.size(); i++) {
+				HabitsHistory histDAO = historiesDAO.get(i);
+				HabitHistory histAPI = historiesAPI.get(i);
 
-
-			// Test the streak calculation
-			Assertions.assertEquals(
-					currentStreaks.get(i),
-					statAPI.getStreak().getCurrentDayStreak()
-			);
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
 		}
 	}
 
 	/**
-	 * Tests that the service fetches the correct Goal data from the 
-	 * DAO level.
-	 */
-	@Test 
-	public void GetHabitGoalTest() throws DataAccessException {
-		for (int i = 0; i < HABIT_NUM_FULL + HABIT_NUM_NULL; i++) {
-			long id = i + 1;
-
-			GetHabitGoalRequest request = GetHabitGoalRequest.newBuilder()
-				.setHabitId(id).build();
-
-			GetHabitGoalResponse response = service.getHabitGoal(request);
-
-			HabitsStats stat = stats.get(i);
-			HabitGoal goalStats = response.getGoalStats();
-
-			isEqualGoal(stat, goalStats);
-		}
-	}
-
-	/**
-	 * Tests that the service fetches the correct Streak data from
-	 * the DAO level.
+	 * Tests that the service fetches the correct data from the DAO level
+	 * for getHabitHistoryByHabit()
 	 */
 	@Test
-	public void getHabitStreakTest() throws DataAccessException {
-		for (int i = 0; i < HABIT_NUM_FULL + HABIT_NUM_NULL; i++) {
-			long id = i + 1;
+	public void getHabitHistoryByHabitTest() throws DataAccessException {
+		for (int i = 0; i < HABIT_NUM; i++) {
+			long habitID = i + 1;
 
-			GetHabitStreakRequest request = GetHabitStreakRequest.newBuilder()
-				.setHabitId(id).build();
+			ListHabitHistoryByHabitRequest request = ListHabitHistoryByHabitRequest.newBuilder()
+				.setHabitId(habitID)
+				.build();
 
-			GetHabitStreakResponse response = service.getHabitStreak(request);
+			ListHabitHistoryByHabitResponse response = service.getHabitHistoryByHabit(request);
 
-			HabitsStats stat = stats.get(i);
-			HabitStreak streakStats = response.getStreakStats();
+			// Make the calls and sort the returned values by history id
+			List<HabitsHistory> historiesDAO = historiesSortedDAO(getHistoriesHabitId(habitID));
+			List<HabitHistory> historiesAPI = historiesSortedAPI(response.getHistoryListList());
 
-			isEqualStreak(stat, streakStats);
+			// Assert that they are the same length
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
+
+			for (int j = 0; j < historiesDAO.size(); j++) {
+				HabitsHistory histDAO = historiesDAO.get(i);
+				HabitHistory histAPI = historiesAPI.get(i);
+
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
 		}
+	}
+
+	/**
+	 * Tests that the service fetches the correct data from the DAO level
+	 * for getCompletedHistoryByDate()
+	 */
+	@Test
+	public void getCompletedHistoryByDateTest() throws DataAccessException {
+
+	}
+
+	public void getFailedHistoryByDateTest() throws DataAccessException {
+
+	}
+
+	public void getCompletedHistoryByHabitTest() throws DataAccessException {
+
+	}
+
+	public void getFailedHistoryByHabitTest() throws DataAccessException {
+
 	}
 }

@@ -160,6 +160,26 @@ public class sqlHistoryDAO extends SQLDatabaseDAO implements HistoryDAO {
 		);	
 	}
 
+	/**
+	 * Fetches all the history entries from a given date range (inclusive)
+	 *
+	 * @param startDate The start date of the desired entries
+	 * @param endDate The end date of the desired entries
+	 *
+	 * @return A List of habit history entires
+	 */
+	public List<HabitsHistory> getHabitsHistoryByDateRange(LocalDate startDate, LocalDate endDate) throws DataAccessException {
+		return this.executeStatement(
+			ctx -> ctx.select()
+				.from(HABITS_HISTORY)
+				.where(HABITS_HISTORY.COMPLETION_DATE.between(
+					startDate,
+					endDate))
+				.fetchInto(HabitsHistory.class)
+		);
+	}
+
+
 	//
 	// =========================== DATA DELETE METHODS =======================
 	//

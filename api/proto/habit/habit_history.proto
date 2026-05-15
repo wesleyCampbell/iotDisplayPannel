@@ -75,3 +75,23 @@ message ListFailedHabitHistoryByDateResponse {
 	repeated HabitHistory history_list = 1;
 }
 
+// Get all completed habit history from a given habit
+
+message ListCompletedHabitHistoryByHabitRequest {
+	uint64 habit_id = 1;
+}
+
+message ListCompletedHabitHistoryByHabitResponse {
+	repeated HabitHistory history_list = 1;
+}
+
+// Get all failed habit history entires from a given habit
+
+message ListFailedHabitHistoryByHabitRequest {
+	uint64 habit_id = 1;
+}
+
+message ListFailedHabitHistoryByHabitResponse {
+	repeated HabitHistory history_list = 1;
+}
+

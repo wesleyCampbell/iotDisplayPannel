@@ -1,194 +1,297 @@
 package service.habits;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.type.Date;
 
 import api.habits.*;
 
 import dataaccess.exception.*;
 import dataaccess.habits.*;
-import model.jooq.habits.tables.pojos.HabitsStats;
+
+import model.jooq.habits.tables.pojos.*;
 
 public class GetHabitHistoryService {
 	//
-	// ========================= CONSTRUCTORS =====================
+	// ====================== CONSTRUCTORS =======================
 	//
 	
-	private StatsDAO statsDAO;
+	private HistoryDAO historyDAO;
 
-	public GetHabitHistoryService(StatsDAO statsDAO) {
-		this.statsDAO = statsDAO;
+	public GetHabitHistoryService(HistoryDAO historyDAO) {
+		this.historyDAO = historyDAO;
 	}
 
 	//
-	// ========================== DATA CALCULATION METHODS ===========================
+	// ======================== HELPER METHODS =======================
 	//
-
-	/**
-	 * Given two dates, this method will calculate the current streak between them.
-	 * It calculates the daily streak, meaning that it will compare the last completed
-	 * day to the current date. If there is more than one day difference between the last
-	 * completed day and the current day, will return 0.
-	 * Additionally, if either lastFail or lastComplete are null, will return -1.
+	
+	/** 
+	 * Translates a LocalDate object into a protobuf google Date
+	 * object
 	 *
-	 * @param lastFail The last failure date
-	 * @param lastComplete The last completed date
+	 * @param date The date to convert
 	 *
-	 * @return the length of the daily streak. 
+	 * @return The API date object
 	 */
-	private int calculateDayStreak(LocalDate lastFail, LocalDate lastComplete) {
-		// If the lastFail or lastComplete objects are null, 
-		// there is not enough history to calculate the streak.
-		if (lastFail == null || lastComplete == null) {
-			return 0;
-		}
-
-		LocalDate today = LocalDate.now();
-		// If the last completion was not yesterday or today, there is no current streak
-		if (ChronoUnit.DAYS.between(lastComplete, today) > 1) {
-			return 0;
-		}
-
-		// casting down from long->int probably won't result in a bug. 
-		// At least not for ~6 million years, at which point I probably won't
-		// need to track my daily pushups. 
-		return (int)ChronoUnit.DAYS.between(lastFail, lastComplete);
-	}
-
-	/**
-	 * Given a Stats object, will extract all the streak statistics
-	 * and will package them into a HabitStreak protobuf object.
-	 *
-	 * @param stats The HabitsStats object to read
-	 *
-	 * @return The HabitStreak data from the HabitsStats
-	 */
-	private HabitStreak extractStreakData(HabitsStats stats) {
-		// Calculate the day streak stats
-		LocalDate lastFailDate = stats.getLastFailureDate();
-		LocalDate lastCompleteDate = stats.getLastCompletedDate();
-		int currentDayStreak = calculateDayStreak(lastFailDate, lastCompleteDate);
-		int longestDayStreak = stats.getLongestDayStreak();
-
-		// extract the goal streak stats
-		int currentGoalStreak = stats.getCurrentGoalStreak();
-		int longestGoalStreak = stats.getLongestGoalStreak();
-
-		long habitId = stats.getHabitId().longValue();
-
-		return HabitStreak.newBuilder()
-			.setHabitId(habitId)
-			.setCurrentDayStreak(currentDayStreak)
-			.setLongestDayStreak(longestDayStreak)
-			.setCurrentGoalStreak(currentGoalStreak)
-			.setLongestGoalStreak(longestGoalStreak)
+	private Date translateDate(LocalDate date) {
+		return Date.newBuilder()
+			.setYear(date.getYear())
+			.setMonth(date.getMonthValue())
+			.setDay(date.getDayOfMonth())
 			.build();
 	}
 
 	/**
-	 * Given a Stats object, this method will extract all the goal statistics
-	 * and will package them into a HabitGoal protobuf object
+	 * Translates an API Date object into a LocalDate object
 	 *
-	 * @param stats The HabitsStats object to read
+	 * @param date The date to convert
 	 *
-	 * @return The HabitGoal data
+	 * @return The DAO level date object
 	 */
-	private HabitGoal extractGoalData(HabitsStats stats) {
-		long habitId = stats.getHabitId().longValue();
+	private LocalDate translateDate(Date date) {
+		return LocalDate.of(
+			date.getYear(),
+			date.getMonth(),
+			date.getDay()
+		);
+	}
+	
+	/**
+	 * Translates a DAO level Habit History data object into an 
+	 * API level Habit History data object.
+	 *
+	 * @param history The DAO level object
+	 *
+	 * @return The API level object
+	 */
+	private HabitHistory translateHistory(HabitsHistory history) {
+		long historyId = history.getHistoryId().longValue();
+		long habitId = history.getHabitId().longValue();
+		// Got to translate the DAO `LocalDate` into the API `Date`
+		Date completionDate = this.translateDate(history.getCompletionDate());
+		boolean completed = history.getCompleted();
+		String notes = history.getNotes();
 
-		GOAL_TYPE goalType;
-		switch (stats.getGoalType()) {
-			case Daily:
-				goalType = GOAL_TYPE.GOAL_TYPE_DAILY;
-				break;
-			case Weekly:
-				goalType = GOAL_TYPE.GOAL_TYPE_WEEKLY;
-				break;
-			case Monthly:
-				goalType = GOAL_TYPE.GOAL_TYPE_MONTHLY;
-				break;
-			case Yearly:
-				goalType = GOAL_TYPE.GOAL_TYPE_YEARLY;
-				break;
-			default:
-				goalType = GOAL_TYPE.GOAL_TYPE_UNSPECIFIED;
-		}
 
-		int goalTarget = stats.getGoalTarget();
-
-		return HabitGoal.newBuilder()
+		return HabitHistory.newBuilder()
+			.setHistoryId(historyId)
 			.setHabitId(habitId)
-			.setGoalType(goalType)
-			.setGoalTarget(goalTarget)
+			.setCompletionDate(completionDate)
+			.setCompleted(completed)
+			.setNotes(notes)
 			.build();
-	}	
+	}
 
 	//
-	// ========================== API TRANSLATION METHODS ===================
+	// ======================== API TRANSLATION METHODS =====================
 	//
 	
 	/**
-	 * Fetches the requested HabitStats data from the database and compiles it into the correct
-	 * API response.
+	 * Translates an API request to get a specific habit history entry
+	 * into a DAO request and forwards it along.
 	 *
-	 * @param request The Get Habit Stat Request object
+	 * @param request The API request
 	 *
-	 * @return The queried data.
+	 * @return The HistoryEntry from the DAO level
 	 */
-	public GetHabitStatResponse getHabitStats(GetHabitStatRequest request) throws DataAccessException {
-		long habitId = request.getHabitId();
+	public GetHabitHistoryResponse getHabitHistory(GetHabitHistoryRequest request) throws DataAccessException {
+		long historyId = request.getHistoryId();
 
-		HabitsStats stats = this.statsDAO.getHabitStats(habitId);
+		HabitsHistory histDAO = this.historyDAO.getHistoryEntry(historyId);
 
-		HabitStreak streak = this.extractStreakData(stats);
-		HabitGoal goal = this.extractGoalData(stats);
-		
-		HabitStatVerbose statsAPI = HabitStatVerbose.newBuilder()
-			.setHabitId(habitId)
-			.setGoal(goal)
-			.setStreak(streak)
-			.build();
-		
-		return GetHabitStatResponse.newBuilder()
-			.setStats(statsAPI)
+		HabitHistory histAPI = this.translateHistory(histDAO);
+
+		return GetHabitHistoryResponse.newBuilder()
+			.setHistory(histAPI)
 			.build();
 	}
 
 	/**
-	 * Fetches the goal data related to a specific habit id
+	 * Translates an API request to get all habits on a date range
+	 * into a DAO call
 	 *
-	 * @param request The request to get the habit goal data
+	 * @param request The API request
 	 *
-	 * @return The habit goal data
+	 * @return The API response containing all requested HabitHistory entries
 	 */
-	public GetHabitGoalResponse getHabitGoal(GetHabitGoalRequest request) throws DataAccessException {
-		long habitId = request.getHabitId();
+	public ListHabitHistoryByDateResponse getHabitHistoryByDate(
+		ListHabitHistoryByDateRequest request) throws DataAccessException
+	{
+		LocalDate startDate = this.translateDate(request.getStartDate());
+		LocalDate endDate = this.translateDate(request.getEndDate());
 
-		HabitsStats stats = this.statsDAO.getHabitStats(habitId);
+		// Fetch the DAO entries and transform them into API entries
+		List<HabitHistory> histories = new ArrayList<>();
+		this.historyDAO.getHabitsHistoryByDateRange(startDate, endDate).forEach(
+			history -> histories.add(this.translateHistory(history))
+		);
 
-		HabitGoal goal = this.extractGoalData(stats);
-
-		return GetHabitGoalResponse.newBuilder()
-			.setGoalStats(goal)
+		return ListHabitHistoryByDateResponse.newBuilder()
+			.addAllHistoryList(histories)
 			.build();
 	}
 
 	/**
-	 * Fetches goal streak data coorelating to a specific habit id
+	 * Translates an API request to get all history entries from
+	 * a given habit id into a DAO call
 	 *
-	 * @param request The request to get the habit streak data
+	 * @param request The API request
 	 *
-	 * @return The habit streak data
+	 * @return The API response containing all requested HabitHistory entries
 	 */
-	public GetHabitStreakResponse getHabitStreak(GetHabitStreakRequest request) throws DataAccessException {
+	public ListHabitHistoryByHabitResponse getHabitHistoryByHabit(
+		ListHabitHistoryByHabitRequest request) throws DataAccessException
+	{
 		long habitId = request.getHabitId();
 
-		HabitsStats stats = this.statsDAO.getHabitStats(habitId);
+		List<HabitHistory> histories = new ArrayList<>();
+		this.historyDAO.getHabitsHistory(habitId).forEach(
+			history -> histories.add(this.translateHistory(history))
+		);
 
-		HabitStreak streak = this.extractStreakData(stats);
+		return ListHabitHistoryByHabitResponse.newBuilder()
+			.addAllHistoryList(histories)
+			.build();
+	}
 
-		return GetHabitStreakResponse.newBuilder()
-			.setStreakStats(streak)
+	/**
+	 * Helper function for get{completion_state}HistoryByDate methods.
+	 * Fetches all history entries within a date that match a given 
+	 * completion status
+	 *
+	 * @param startDate The start date of the daterange
+	 * @param endDate The end date of the daterange
+	 * @param status The completion status of the history entries to include
+	 *
+	 * @return A List of HabitHistory API objects that meet the critera
+	 */
+	private List<HabitHistory> getHistoryByDateByCompletionState(
+			LocalDate startDate,
+			LocalDate endDate,
+			boolean status) throws DataAccessException {
+		// Get all entries within the date range
+		List<HabitHistory> histories = new ArrayList<>();
+		this.historyDAO.getHabitsHistoryByDateRange(startDate, endDate).forEach(
+			history -> histories.add(this.translateHistory(history))
+		);	
+
+		// Filter out the ones that do not match the desired completion status
+		histories.removeIf(
+			history -> history.getCompleted() != status
+		);
+
+		return histories;
+	}
+
+	/**
+	 * Translates an API request to get all completed history entries from a given 
+	 * date range id into a DAO call
+	 *
+	 * @param request the API request
+	 *
+	 * @return The API response containing all requested HabitHistory entries
+	 */
+	public ListCompletedHabitHistoryByDateResponse getCompletedHistoryByDate(
+		ListCompletedHabitHistoryByDateRequest request) throws DataAccessException 
+	{
+		LocalDate startDate = this.translateDate(request.getStartDate());
+		LocalDate endDate = this.translateDate(request.getEndDate());
+
+		List<HabitHistory> histories = this.getHistoryByDateByCompletionState(startDate, endDate, true);
+
+		return ListCompletedHabitHistoryByDateResponse.newBuilder()
+			.addAllHistoryList(histories)
+			.build();
+	}
+
+	/**
+	 * Translates an API request to get all uncompleted history entries from a given
+	 * date range into a DAO call
+	 *
+	 * @param request The API request
+	 *
+	 * @return The API response containing all requested HabitHistory entries
+	 */
+	public ListFailedHabitHistoryByDateResponse getFailedHistoryByDate(
+		ListFailedHabitHistoryByDateRequest request) throws DataAccessException
+	{
+		LocalDate startDate = this.translateDate(request.getStartDate());
+		LocalDate endDate = this.translateDate(request.getEndDate());
+
+		List<HabitHistory> histories = this.getHistoryByDateByCompletionState(startDate, endDate, false);
+
+		return ListFailedHabitHistoryByDateResponse.newBuilder()
+			.addAllHistoryList(histories)
+			.build();
+	}
+
+	/**
+	 * Helper function for get{completion_status}HistoryByHabit().
+	 * Returns a list of API HabitHistory objects that match the 
+	 * given completion status and habit id.
+	 *
+	 * @param habitId The desired habitId
+	 * @param state The completion state of the desired entries
+	 *
+	 * @return A List of API HabitHistory objects that meet the criteria
+	 */
+	private List<HabitHistory> getHistoryByIdByCompletionState(
+		long habitId,
+		boolean state) throws DataAccessException {
+		// Fetch all the history entries that match the id
+		List<HabitHistory> histories = new ArrayList<>();
+		this.historyDAO.getHabitsHistory(habitId).forEach(
+			history -> histories.add(this.translateHistory(history))
+		);
+		
+		// filter out the ones that do not match the completion state
+		histories.removeIf(
+			history -> history.getCompleted() != state
+		);
+		
+		return histories;
+	}
+
+	/**
+	 * Translates an API request to get all completed history entries from
+	 * a given habit id into a DAO call
+	 *
+	 * @param request the API request
+	 *
+	 * @return The API response containing all requested HabitHistory entries
+	 */
+	public ListCompletedHabitHistoryByHabitResponse getCompletedHistoryByHabit(
+		ListCompletedHabitHistoryByHabitRequest request) throws DataAccessException
+	{
+		Long habitId = request.getHabitId();
+
+		List<HabitHistory> histories = this.getHistoryByIdByCompletionState(habitId, true);
+
+		return ListCompletedHabitHistoryByHabitResponse.newBuilder()
+			.addAllHistoryList(histories)
+			.build();
+	}
+
+	/**
+	 * Translates an API request to get all failed history entries from
+	 * a given habit id into a DAO call
+	 *
+	 * @param request the API request
+	 *
+	 * @param The API response containing all requested HabitHistory entries
+	 */
+	public ListFailedHabitHistoryByHabitResponse getFailedHistoryByHabit(
+		ListFailedHabitHistoryByHabitRequest request) throws DataAccessException
+	{
+		Long habitId = request.getHabitId();
+
+		List<HabitHistory> histories = this.getHistoryByIdByCompletionState(habitId, true);
+
+		return ListFailedHabitHistoryByHabitResponse.newBuilder()
+			.addAllHistoryList(histories)
 			.build();
 	}
 }

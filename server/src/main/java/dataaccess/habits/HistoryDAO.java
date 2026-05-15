@@ -63,6 +63,16 @@ public interface HistoryDAO {
 	 */
 	public List<HabitsHistory> getHabitsHistory(LocalDate date) throws DataAccessException;
 
+	/**
+	 * Fetches all the history entries from a given date range (inclusive)
+	 *
+	 * @param startDate The start date of the desired entries
+	 * @param endDate The end date of the desired entries
+	 *
+	 * @return A List of habit history entires
+	 */
+	public List<HabitsHistory> getHabitsHistoryByDateRange(LocalDate startDate, LocalDate endDate) throws DataAccessException;
+
 	//
 	// ====================== DELETION METHODS =======================
 	//
