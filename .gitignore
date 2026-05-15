@@ -1,0 +1,11 @@
+# Build artifacts
+target
+
+# Database property credentials
+db.properties
+jooq.conf
+
+# JDTLS artifacts
+.classpath
+.project
+.settings
