@@ -64,4 +64,50 @@ public class ListHabitsService {
 		return response;
 	}
 
+	/**
+	 * Takes in an API request to fetch a specific habit entry
+	 * and translates it to a format the DAO level
+	 * can understand.
+	 *
+	 * @param request the API request to get the habit entry
+	 * 
+	 * @return API response containing the requested habit entry
+	 */
+	public GetHabitEntryResponse getHabitEntry(GetHabitEntryRequest request) throws DataAccessException {
+		long habitId = request.getHabitId();
+
+		HabitsCatalog habit = this.habitsDAO.getHabit(habitId);
+
+		HabitEntry entry = generateHabitEntry(habit);
+
+		return GetHabitEntryResponse.newBuilder()
+			.setHabitData(entry)
+			.build();
+	}
+
+	public GetActiveHabitsResponse getActiveHabits(GetActiveHabitsRequest request) throws DataAccessException {
+		List<HabitEntry> habitEntries = new ArrayList<>();
+		this.habitsDAO.getActiveHabits().forEach(
+			habit -> habitEntries.add(generateHabitEntry(habit))
+		);
+
+		GetActiveHabitsResponse response = GetActiveHabitsResponse.newBuilder()
+			.addAllHabitDataList(habitEntries)
+			.build();
+
+		return response;
+	}
+
+	public GetInactiveHabitsResponse getInactiveHabits(GetInactiveHabitsRequest request) throws DataAccessException {
+		List<HabitEntry> habitEntries = new ArrayList<>();
+		this.habitsDAO.getInactiveHabits().forEach(
+			habit -> habitEntries.add(generateHabitEntry(habit))
+		);
+
+		GetInactiveHabitsResponse response = GetInactiveHabitsResponse.newBuilder()
+			.addAllHabitDataList(habitEntries)
+			.build();
+
+		return response;
+	}
 }
