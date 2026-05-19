@@ -450,13 +450,6 @@ public class GetHabitHistoryServiceTests {
 		}
 	}
 
-	private <T> void printAll(String name, List<T> lyst) {
-		System.out.println(String.format("List <%s>: ", name));
-		for (T t : lyst) {
-			System.out.println(String.format("    %s", t.toString()));
-		}
-	}
-
 	/**
 	 * Tests that the service fetches the correct data from the DAO level
 	 * for getFailedHistoryByHabit()
