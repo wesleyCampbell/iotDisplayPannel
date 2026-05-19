@@ -288,7 +288,7 @@ public class GetHabitHistoryService {
 	{
 		Long habitId = request.getHabitId();
 
-		List<HabitHistory> histories = this.getHistoryByIdByCompletionState(habitId, true);
+		List<HabitHistory> histories = this.getHistoryByIdByCompletionState(habitId, false);
 
 		return ListFailedHabitHistoryByHabitResponse.newBuilder()
 			.addAllHistoryList(histories)

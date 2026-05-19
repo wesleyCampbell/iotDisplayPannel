@@ -16,7 +16,6 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Comparator;
 
 public class GetHabitHistoryServiceTests {
@@ -232,6 +231,22 @@ public class GetHabitHistoryServiceTests {
 			.sorted(Comparator.comparing(HabitsHistory::getHistoryId))
 			.toList();
 	}
+
+	/**
+	 * Filters and returns a List of Habit Entries that match a given completion
+	 * status
+	 *
+	 * @param histories A list of history entry objects
+	 * @param status The completion status of the entries to return
+	 *
+	 * @return A list of the histories that match the completion status
+	 */
+	private List<HabitsHistory> historiesFilteredCompletionStatus(List<HabitsHistory> histories, boolean status) {
+		return histories.stream()
+			.filter(
+				history -> Boolean.valueOf(status).equals(history.getCompleted())
+			).toList();
+	}
 	
 	//
 	// ===================== UNIT TESTS ===================
@@ -330,18 +345,149 @@ public class GetHabitHistoryServiceTests {
 	 */
 	@Test
 	public void getCompletedHistoryByDateTest() throws DataAccessException {
+		for (int j = 0; j < HISTORY_NUM; j++) {
+			LocalDate date = TODAY.minusDays(j + 1);
 
+			ListCompletedHabitHistoryByDateRequest request = ListCompletedHabitHistoryByDateRequest.newBuilder()
+				.setStartDate(convertDate(date))
+				.setEndDate(convertDate(TODAY))
+				.build();
+
+			ListCompletedHabitHistoryByDateResponse response = service.getCompletedHistoryByDate(request);
+
+			// extract the DAO and API lists
+			List<HabitsHistory> historiesDAO = historiesFilteredCompletionStatus(getHistoriesRange(date, TODAY), true);
+			historiesDAO = historiesSortedDAO(historiesDAO);
+
+			List<HabitHistory> historiesAPI = historiesSortedAPI(response.getHistoryListList());
+
+
+			// compares them
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
+
+			for (int i = 0; i < historiesDAO.size(); i++) {
+				HabitsHistory histDAO = historiesDAO.get(i);
+				HabitHistory histAPI = historiesAPI.get(i);
+
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
+		}
 	}
 
+	/**
+	 * Tests that the service fetches the correct data from the DAO level
+	 * for getFailedHistoryByDate()
+	 */
+	@Test
 	public void getFailedHistoryByDateTest() throws DataAccessException {
+		for (int j = 0; j < HISTORY_NUM; j++) {
+			LocalDate date = TODAY.minusDays(j + 1);
 
+			ListFailedHabitHistoryByDateRequest request = ListFailedHabitHistoryByDateRequest.newBuilder()
+				.setStartDate(convertDate(date))
+				.setEndDate(convertDate(TODAY))
+				.build();
+
+			ListFailedHabitHistoryByDateResponse response = service.getFailedHistoryByDate(request);
+
+			// extract the DAO and API lists
+			List<HabitsHistory> historiesDAO = historiesFilteredCompletionStatus(getHistoriesRange(date, TODAY), false);
+			historiesDAO = historiesSortedDAO(historiesDAO);
+
+			List<HabitHistory> historiesAPI = historiesSortedAPI(response.getHistoryListList());
+
+
+			// compares them
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
+
+			for (int i = 0; i < historiesDAO.size(); i++) {
+				HabitsHistory histDAO = historiesDAO.get(i);
+				HabitHistory histAPI = historiesAPI.get(i);
+
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
+		}
 	}
 
+	/**
+	 * Tests that the service fetches the correct data from the DAO level
+	 * for getCompletedHistoryByHabit()
+	 */
+	@Test
 	public void getCompletedHistoryByHabitTest() throws DataAccessException {
+		for (int i = 0; i < HABIT_NUM; i++) {
+			long habitId = i + 1;
 
+			ListCompletedHabitHistoryByHabitRequest request = ListCompletedHabitHistoryByHabitRequest.newBuilder()
+				.setHabitId(habitId)
+				.build();
+
+			// Make the API call
+			ListCompletedHabitHistoryByHabitResponse response = service.getCompletedHistoryByHabit(request);
+
+			// Extract the DAO and API data
+			List<HabitsHistory> historiesDAO = historiesSortedDAO(
+				historiesFilteredCompletionStatus(
+					getHistoriesHabitId(habitId),
+					true
+				)
+			);
+
+			List<HabitHistory> historiesAPI = historiesSortedAPI(
+				response.getHistoryListList()
+			);
+
+			// Assert that the lists are the same size
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
+
+			// Assert each entry is equivilant
+			for (int j = 0; j < historiesDAO.size(); j++) {
+				HabitsHistory histDAO = historiesDAO.get(j);
+				HabitHistory histAPI = historiesAPI.get(j);
+
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
+		}
 	}
 
-	public void getFailedHistoryByHabitTest() throws DataAccessException {
+	private <T> void printAll(String name, List<T> lyst) {
+		System.out.println(String.format("List <%s>: ", name));
+		for (T t : lyst) {
+			System.out.println(String.format("    %s", t.toString()));
+		}
+	}
 
+	/**
+	 * Tests that the service fetches the correct data from the DAO level
+	 * for getFailedHistoryByHabit()
+	 */
+	@Test
+	public void getFailedHistoryByHabitTest() throws DataAccessException {
+		for (int i = 0; i < HABIT_NUM; i++) {
+			long habitId = i + 1;
+			
+			ListFailedHabitHistoryByHabitRequest request = ListFailedHabitHistoryByHabitRequest.newBuilder()
+				.setHabitId(habitId)
+				.build();
+
+			// Make the API request
+			ListFailedHabitHistoryByHabitResponse response = service.getFailedHistoryByHabit(request);
+			
+			// Extract the return lists
+			List<HabitHistory> historiesAPI = response.getHistoryListList();
+
+			List<HabitsHistory> historiesDAO = historiesFilteredCompletionStatus(getHistoriesHabitId(habitId), false);
+
+			// Assert that the two return lists are the same size
+			Assertions.assertEquals(historiesDAO.size(), historiesAPI.size());
+
+			// Assert that the each entry is equal
+			for (int j = 0; j < historiesDAO.size(); j++) {
+				HabitsHistory histDAO = historiesDAO.get(j);
+				HabitHistory histAPI = historiesAPI.get(j);
+
+				Assertions.assertTrue(isEqualHistory(histDAO, histAPI));
+			}
+		}
 	}
 }
