@@ -114,5 +114,4 @@ public class MarkHabitCompletionServiceTests {
 			Assertions.assertEquals(false, historyDAO.getCompleted());
 		}
 	}
-
 }
