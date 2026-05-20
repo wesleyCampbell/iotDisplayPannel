@@ -103,3 +103,11 @@ message MarkHistoryCompletionStateRequest {
 message MarkHistoryCompletionStateResponse {
 }
 
+// Change the notes of a given habit history entry
+message UpdateHabitHistoryNotesRequest {
+	uint64 history_id = 1;
+	string new_notes = 2;
+}
+message  UpdateHabitHistoryNotesResponse {
+}
+
