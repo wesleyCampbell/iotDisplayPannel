@@ -111,3 +111,18 @@ message UpdateHabitHistoryNotesRequest {
 message  UpdateHabitHistoryNotesResponse {
 }
 
+// Create a new habit history entry
+message CreateHabitHistoryRequest {
+	uint64 habit_id = 1;
+	bool completed = 2;
+	string notes = 3;
+}
+message CreateHabitHistoryDatedRequest {
+	uint64 habit_id = 1;
+	google.type.Date completion_date = 2;
+	bool completed = 3;
+	string notes = 4;
+}
+message CreateHabitHistoryResponse {
+	uint64 history_id = 1;
+}
