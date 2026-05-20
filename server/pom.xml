@@ -4,7 +4,7 @@
 
 	<artifactId>server</artifactId>
 	<groupId>dev.projectganymede.iot</groupId>
-	<version>1.0.5</version>
+	<version>1.0.6</version>
 
 	<parent>
 		<artifactId>displaypannel</artifactId>

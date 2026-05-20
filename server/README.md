@@ -3,7 +3,7 @@
 ---
 
 Author: Wesley Campbell
-Version: 1.0.5
+Version: 1.0.6
 Date: 2026-04-10
 
 ---
@@ -92,6 +92,11 @@ The endpoints for each service are:
 | api/habit/stats | GET     | Get the habit stats              | JSON serialization of relevant stats  |
 
 ### Change Log
+
+##### Version 1.0.6, (2026-05-20):
+  - Implemented the API service level of the application
+  - Can now make API calls defined in the protobuf configuration to apply CRUD opperations to the database
+  - Developed testing infrastructure for service verrification.
 
 ##### Version 1.0.5, (2026-05-08):
   - Implemented Data Access Objects as bridge between MariaDB database and Java program
