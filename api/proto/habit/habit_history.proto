@@ -126,3 +126,22 @@ message CreateHabitHistoryDatedRequest {
 message CreateHabitHistoryResponse {
 	uint64 history_id = 1;
 }
+
+// Delete a habit history entry
+message DeleteHistoryEntryRequest {
+	uint64 history_id = 1;
+}
+message DeleteHistoryEntryResponse {
+}
+
+message DeleteHabitHistoryRequest {
+	uint64 habit_id = 1;
+}
+message DeleteHabitHistoryResponse {
+}
+
+message DeleteHistoryEntriesRequest {
+	google.type.Date completion_date = 1;
+}
+message DeleteHistoryEntriesResponse {
+}
