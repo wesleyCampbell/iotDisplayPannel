@@ -95,3 +95,11 @@ message ListFailedHabitHistoryByHabitResponse {
 	repeated HabitHistory history_list = 1;
 }
 
+// Change the completion status of a given habit
+message MarkHistoryCompletionStateRequest {
+	uint64 history_id = 1;
+	bool status = 2;
+}
+message MarkHistoryCompletionStateResponse {
+}
+
