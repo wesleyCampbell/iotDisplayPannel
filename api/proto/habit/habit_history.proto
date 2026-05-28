@@ -95,6 +95,18 @@ message ListFailedHabitHistoryByHabitResponse {
 	repeated HabitHistory history_list = 1;
 }
 
+message ListHabitHistoryAPIRequest {
+	oneof payload {
+		GetHabitHistoryRequest get_history_entry = 10;
+		ListHabitHistoryByDateRequest list_history_by_date = 11;
+		ListHabitHistoryByHabitRequest list_history_by_habit = 12;
+		ListCompletedHabitHistoryByDateRequest list_completed_history_by_date = 13;
+		ListFailedHabitHistoryByDateRequest list_failed_history_by_date = 14;
+		ListCompletedHabitHistoryByHabitRequest list_completed_history_by_habit = 15;
+		ListFailedHabitHistoryByHabitRequest list_failed_history_by_habit = 16;
+	}
+}
+
 // Change the completion status of a given habit
 message MarkHistoryCompletionStateRequest {
 	uint64 history_id = 1;
@@ -123,6 +135,12 @@ message CreateHabitHistoryDatedRequest {
 	bool completed = 3;
 	string notes = 4;
 }
+message CreateHabitHistoryAPIRequest {
+	oneof payload {
+		CreateHabitHistoryRequest create_history= 10;
+		CreateHabitHistoryDatedRequest create_history_dated = 11;
+	}
+}
 message CreateHabitHistoryResponse {
 	uint64 history_id = 1;
 }
@@ -144,4 +162,12 @@ message DeleteHistoryEntriesRequest {
 	google.type.Date completion_date = 1;
 }
 message DeleteHistoryEntriesResponse {
+}
+
+message DeleteHabitHistoryAPIRequest {
+	oneof payload {
+		DeleteHistoryEntryRequest delete_history_entry = 10;
+		DeleteHabitHistoryRequest delete_habit_history = 11;
+		DeleteHistoryEntriesRequest delete_history_entries = 12;
+	}
 }

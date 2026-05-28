@@ -66,7 +66,7 @@ public class CreateHabitHistoryService {
 	 *
 	 * @return The API response containing the new id;
 	 */
-	public CreateHabitHistoryResponse createHabit(CreateHabitHistoryRequest request) throws DataAccessException {
+	public CreateHabitHistoryResponse createHistory(CreateHabitHistoryRequest request) throws DataAccessException {
 		long habitId = request.getHabitId();
 		boolean completed = request.getCompleted();
 		String notes = request.getNotes();
@@ -87,7 +87,7 @@ public class CreateHabitHistoryService {
 	 *
 	 * @return The API response containing the new id;
 	 */
-	public CreateHabitHistoryResponse createHabitDated(CreateHabitHistoryDatedRequest request) throws DataAccessException {
+	public CreateHabitHistoryResponse createHistoryDated(CreateHabitHistoryDatedRequest request) throws DataAccessException {
 		long habitId = request.getHabitId();
 		boolean completed = request.getCompleted();
 		String notes = request.getNotes();

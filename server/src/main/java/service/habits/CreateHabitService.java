@@ -20,7 +20,7 @@ public class CreateHabitService {
 	// ======================== MEMBER METHODS ==================
 	//
 	
-	 public CreateHabitEntryResponse createGame(CreateHabitEntryRequest request) throws DataAccessException {
+	 public CreateHabitEntryResponse createHabit(CreateHabitEntryRequest request) throws DataAccessException {
 		String name = request.getName();
 		String description = request.getDescription();
 		boolean active = request.getActive();

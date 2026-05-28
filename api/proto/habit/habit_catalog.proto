@@ -70,3 +70,13 @@ message CreateHabitEntryRequest {
 message CreateHabitEntryResponse {
 	
 }
+
+// The actual get habits API request
+message GetHabitAPIRequest {
+	oneof payload {
+		GetHabitEntryRequest get_habit = 10;
+		GetHabitCatalogRequest get_all_habits = 11;
+		GetActiveHabitsRequest get_active_habits = 12;
+		GetInactiveHabitsRequest get_inactive_habits = 13;
+	}
+}

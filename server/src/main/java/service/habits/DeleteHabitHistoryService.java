@@ -31,7 +31,7 @@ public class DeleteHabitHistoryService {
 	 *
 	 * @param The API response
 	 */
-	DeleteHistoryEntryResponse deleteHistoryEntry(DeleteHistoryEntryRequest request) throws DataAccessException {
+	public DeleteHistoryEntryResponse deleteHistoryEntry(DeleteHistoryEntryRequest request) throws DataAccessException {
 		long historyId = request.getHistoryId();
 
 		this.historyDAO.deleteHistoryEntry(historyId);
@@ -47,7 +47,7 @@ public class DeleteHabitHistoryService {
 	 *
 	 * @param The API response
 	 */
-	DeleteHabitHistoryResponse deleteHabitHistory(DeleteHabitHistoryRequest request) throws DataAccessException {
+	public DeleteHabitHistoryResponse deleteHabitHistory(DeleteHabitHistoryRequest request) throws DataAccessException {
 		long habitId = request.getHabitId();
 
 		this.historyDAO.deleteHabitsHistory(habitId);
@@ -78,7 +78,7 @@ public class DeleteHabitHistoryService {
 	 *
 	 * @param The API response
 	 */
-	DeleteHistoryEntriesResponse deleteHistoryEntries(DeleteHistoryEntriesRequest request) throws DataAccessException {
+	public DeleteHistoryEntriesResponse deleteHistoryEntries(DeleteHistoryEntriesRequest request) throws DataAccessException {
 		LocalDate date = convertDate(request.getCompletionDate());
 
 		this.historyDAO.deleteHabitsHistory(date);
