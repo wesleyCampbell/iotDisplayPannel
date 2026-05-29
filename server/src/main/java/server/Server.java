@@ -73,6 +73,7 @@ public class Server {
 		javalin.post(HABIT_HISTORY_ENDPOINT, this.habitHistoryHandler::createHistoryRequest);
 		javalin.delete(HABIT_HISTORY_ENDPOINT, this.habitHistoryHandler::deleteHistoryRequest);
 		javalin.get(HABIT_HISTORY_ENDPOINT, this.habitHistoryHandler::getHistoryRequest);
+		javalin.put(HABIT_HISTORY_ENDPOINT, this.habitHistoryHandler::updateHistoryRequest);
 		
 	}
 

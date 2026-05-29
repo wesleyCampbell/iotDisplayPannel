@@ -468,25 +468,47 @@ public class HabitHistoryHandler extends Handler {
 
 	/**
 	 * Translates an HTTP request into an API call that
-	 * marks the completion status of a given history entry.
+	 * will update some attribute of a habit history entry.
 	 *
 	 * @param ctx The HTTP Javalin context.
 	 *
-	 * @return True if API call is successful, false otherwise
+	 * @return True if API call is successful, false otherwise.
 	 */
-	public boolean markHistoryCompletionStateRequest(Context ctx) {
+	public boolean updateHistoryRequest(Context ctx) {
 		// Extract the raw request body
 		byte[] body = ctx.bodyAsBytes();
 
 		// Parse the API call
-		MarkHistoryCompletionStateRequest request;
+		UpdateHabitHistoryAPIRequest request;
 		try {
-			request = MarkHistoryCompletionStateRequest.parseFrom(body);
+			request = UpdateHabitHistoryAPIRequest.parseFrom(body);
 		} catch (InvalidProtocolBufferException ex) {
 			this.setCtxStatus(ctx, HTTP_CODE_MALFORMED_REQUEST);
 			return false;
 		}
 
+		// Pass the call to the requested function
+		switch (request.getPayloadCase()) {
+			case CHANGE_COMPLETION_STATE:
+				return this.setHistoryCompletionState(ctx, request.getChangeCompletionState());
+			case CHANGE_NOTES:
+				return this.setHistoryNotes(ctx, request.getChangeNotes());
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Makes an API call to change the completion state of a habit
+	 * history entry in the database and will translate the API response
+	 * into an HTTP response.
+	 *
+	 * @param ctx The Javalin HTTP context
+	 * @param request The API request to make
+	 *
+	 * @return True if API call succesful, false otherwise
+	 */
+	public boolean setHistoryCompletionState(Context ctx, MarkHistoryCompletionStateRequest request) {
 		// Make the API call
 		MarkHistoryCompletionStateResponse response;
 		try {
@@ -506,26 +528,16 @@ public class HabitHistoryHandler extends Handler {
 	}
 
 	/**
-	 * Translates an HTTP request into an API call that
-	 * updates the notes of a given history id.
+	 * Makes an API call to change the notes of a habit history
+	 * entry in the database and will translate the API response
+	 * into an HTTP response.
 	 *
 	 * @param ctx The Javalin HTTP context
+	 * @param request The API request to make
 	 *
-	 * @return True if API call successful, false otherwise.
+	 * @return True if API call successfull, false otherwise.
 	 */
-	public boolean updateHistoryNotesRequest(Context ctx) {
-		// Extract the raw request body
-		byte[] body = ctx.bodyAsBytes();
-
-		// Parse the API request
-		UpdateHabitHistoryNotesRequest request;
-		try {
-			request = UpdateHabitHistoryNotesRequest.parseFrom(body);
-		} catch (InvalidProtocolBufferException ex) {
-			this.setCtxStatus(ctx, HTTP_CODE_MALFORMED_REQUEST);
-			return false;
-		}
-
+	public boolean setHistoryNotes(Context ctx, UpdateHabitHistoryNotesRequest request) {
 		// Make the API call
 		UpdateHabitHistoryNotesResponse response;
 		try {

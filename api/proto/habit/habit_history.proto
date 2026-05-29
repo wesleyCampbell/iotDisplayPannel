@@ -123,6 +123,13 @@ message UpdateHabitHistoryNotesRequest {
 message  UpdateHabitHistoryNotesResponse {
 }
 
+message UpdateHabitHistoryAPIRequest {
+	oneof payload {
+		MarkHistoryCompletionStateRequest change_completion_state = 10;
+		UpdateHabitHistoryNotesRequest change_notes = 11;
+	}
+}
+
 // Create a new habit history entry
 message CreateHabitHistoryRequest {
 	uint64 habit_id = 1;
